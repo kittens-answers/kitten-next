@@ -1,0 +1,14 @@
+{
+    "python.analysis.typeCheckingMode": "basic",
+    "cSpell.words": [
+        "anyio",
+        "pytestmark"
+    ],
+    "python.testing.pytestArgs": [
+        "--cov=answers",
+        "--cov-report=html",
+        "tests/"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}
