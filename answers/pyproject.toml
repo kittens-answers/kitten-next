@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "answers"
+version = "0.1.0"
+description = ""
+authors = ["Rychanya <rychanya@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.12.0"
+isort = "^5.12.0"
+ruff = "^0.0.237"
+anyio = "^3.6.2"
+pytest = "^7.2.1"
+coverage = "^7.1.0"
+pytest-cov = "^4.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+
+[tool.pytest.ini_options]
+addopts = "--cov=answers --cov-report=html tests/"
