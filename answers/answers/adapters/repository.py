@@ -6,13 +6,13 @@ from answers.service_layer.unit_of_work import AbstractUnitOfWork
 
 
 class AbstractQuestionRepository(abc.ABC):
-    @abc.abstractmethod
+    @abc.abstractmethod  # pragma: no cover
     async def add(self, question: Question, uof: AbstractUnitOfWork) -> str:
         raise NotImplementedError
 
 
 class AbstractOptionsRepository(abc.ABC):
-    @abc.abstractmethod
+    @abc.abstractmethod  # pragma: no cover
     async def add(self, options: Options, uow: AbstractUnitOfWork) -> str:
         raise NotADirectoryError
 
