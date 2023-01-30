@@ -1,16 +1,51 @@
+import enum
 from dataclasses import dataclass
 
-from answers.domain import QuestionType
+
+@enum.unique
+class QuestionType(enum.StrEnum):
+    ONE = "ONE"
+    MANY = "MANY"
+    ORDER = "ORDER"
+    MATCH = "MATCH"
+
+
+@enum.unique
+class TagsType(enum.StrEnum):
+    IS_CORRECT = "IS_CORRECT"
+
+
+@dataclass(frozen=True)
+class User:
+    user_id: str
 
 
 @dataclass(frozen=True)
 class Question:
-    user_id: str
     question_text: str
     question_type: QuestionType
+    created_by: str
 
 
 @dataclass(frozen=True)
 class Options:
+    question_id: str
     options: frozenset[str]
     extra_options: frozenset[str]
+    created_by: str
+
+
+@dataclass(frozen=True)
+class Answer:
+    answer_id: str
+    question_id: str
+    options_id: str
+    answer: tuple[tuple[str, str], ...]
+    created_by: str
+
+
+@dataclass(frozen=True)
+class Tag:
+    answer_id: str
+    tag_name: TagsType
+    value: str
