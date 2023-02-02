@@ -1,5 +1,8 @@
 {
     "cSpell.words": [
-        "pytestmark"
+        "aiosqlite",
+        "pytestmark",
+        "sessionmaker",
+        "sqlalchemy"
     ]
 }
