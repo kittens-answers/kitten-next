@@ -1,8 +1,10 @@
 {
     "cSpell.words": [
         "aiosqlite",
+        "joinedload",
         "pytestmark",
         "sessionmaker",
+        "shortuuid",
         "sqlalchemy"
     ]
 }
