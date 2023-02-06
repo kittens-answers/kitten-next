@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from answers.domain import QuestionType
+from answers.domain.models import QuestionType, TagsType
 
 
 @dataclass(frozen=True)
@@ -11,4 +11,4 @@ class CreateQuestion:
     options: tuple[str]
     extra_options: tuple[str]
     answer: tuple[tuple[str, str], ...]
-    tags: tuple[tuple[str, str], ...]
+    tags: tuple[tuple[TagsType, str], ...]
