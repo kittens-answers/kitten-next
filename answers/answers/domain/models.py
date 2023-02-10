@@ -22,30 +22,33 @@ class User:
 
 @dataclass(frozen=True)
 class Question:
-    question_text: str
+    text: str
     question_type: QuestionType
     created_by: str
-
-
-@dataclass(frozen=True)
-class Options:
-    question_id: str
+    id: str | None
     options: frozenset[str]
     extra_options: frozenset[str]
-    created_by: str
 
 
-@dataclass(frozen=True)
-class Answer:
-    answer_id: str
-    question_id: str
-    options_id: str
-    answer: tuple[tuple[str, str], ...]
-    created_by: str
+# @dataclass(frozen=True)
+# class Options:
+#     question_id: str
+#     options: frozenset[str]
+#     extra_options: frozenset[str]
+#     created_by: str
 
 
-@dataclass(frozen=True)
-class Tag:
-    answer_id: str
-    tag_name: TagsType
-    value: str
+# @dataclass(frozen=True)
+# class Answer:
+#     answer_id: str
+#     question_id: str
+#     options_id: str
+#     answer: tuple[tuple[str, str], ...]
+#     created_by: str
+
+
+# @dataclass(frozen=True)
+# class Tag:
+#     answer_id: str
+#     tag_name: TagsType
+#     value: str

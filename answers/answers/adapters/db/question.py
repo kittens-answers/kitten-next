@@ -1,66 +1,42 @@
+from typing import Sequence
+
 from sqlalchemy import select
-from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from answers.adapters.db.db_models import (
-    OptionItem,
-    Question,
-    User,
-    ExtraOptionItem,
-    Option,
-)
+from answers.adapters.db.db_models import ExtraOptionItem, Option, OptionItem, Question
+from answers.domain.commands import CreateQuestion
 
 
-async def get_question(
-    text: str,
-    question_type: str,
-    option: tuple[str],
-    extra_option: tuple[str],
-    session: AsyncSession,
-) -> Question | None:
+async def get(dto: CreateQuestion, session: AsyncSession) -> Sequence[Question]:
     res = await session.execute(
-        select(Question)
+        select(Question, Option)
+        .join(Option)
         .options(
             joinedload(Question.option),
-            joinedload(Question.answers),
             joinedload(Question.user),
+            joinedload(Option.options),
+            joinedload(Option.extra_options),
         )
         .where(
-            Question.text == text,
-            Question.question_type == question_type,
-            *(Option.options.any(OptionItem.text == op) for op in option),
-            *(
-                Option.extra_options.any(ExtraOptionItem.text == eop)
-                for eop in extra_option
-            )
+            Question.text == dto.question_text,
+            Question.question_type == dto.question_type,
         )
-        .limit(1)
     )
-    try:
-        return res.unique().scalars().one()
-    except NoResultFound:
-        return
+    return res.unique().scalars().all()
 
 
-async def get_or_create(
-    text: str,
-    question_type: str,
-    user: User,
-    option: tuple[str],
-    extra_option: tuple[str],
+async def create(
+    dto: CreateQuestion,
+    user_id: str,
     session: AsyncSession,
 ):
-    question = await get_question(
-        text=text,
-        question_type=question_type,
-        option=option,
-        extra_option=extra_option,
-        session=session,
-    )
-    if question:
-        return question
-    question = Question(text=text, question_type=question_type)
-    question.user = user
+    question = Question(text=dto.question_text, question_type=dto.question_type)
+    question.created_by = user_id
+    option = Option()
+    for _option in dto.options:
+        option.options.append(OptionItem(text=_option))
+    for extra_option in dto.extra_options:
+        option.extra_options.append(ExtraOptionItem(text=extra_option))
+    question.option = option
     session.add(question)
-    return question

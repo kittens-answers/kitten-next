@@ -1,11 +1,10 @@
 from contextlib import AbstractAsyncContextManager
+from typing import Protocol
 
-AbstractUnitOfWork = AbstractAsyncContextManager
 
-
-class FakeUOW(AbstractUnitOfWork):
-    async def __aenter__(self):
+class AbstractUOW(Protocol):
+    async def commit(self, *args, **kwargs):
         ...
 
-    async def __aexit__(self, exc_type, exc_value, traceback):
-        ...
+
+AbstractUOWFabric = AbstractAsyncContextManager[AbstractUOW]
