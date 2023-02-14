@@ -3,6 +3,7 @@
         "aiosqlite",
         "joinedload",
         "pytestmark",
+        "selectinload",
         "sessionmaker",
         "shortuuid",
         "sqlalchemy"
