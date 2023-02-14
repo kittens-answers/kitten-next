@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, UniqueConstraint
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
@@ -8,6 +8,7 @@ from sqlalchemy.orm import (
 )
 
 from answers.adapters.db.utils import new_id
+from answers.domain.models import QuestionType
 
 
 class Base(MappedAsDataclass, DeclarativeBase):
@@ -22,67 +23,59 @@ class User(Base):
 
 class Question(Base):
     __tablename__ = "question"
-    __table_args__ = (UniqueConstraint("text", "question_type", name="question_uc"),)
 
     text: Mapped[str] = mapped_column()
-    question_type: Mapped[str] = mapped_column()
+    question_type: Mapped[QuestionType] = mapped_column()
     id: Mapped[str] = mapped_column(primary_key=True, default_factory=new_id)
     created_by: Mapped[str] = mapped_column(ForeignKey("user.id"), init=False)
-    user: Mapped[User] = relationship(init=False)
-    option: Mapped["Option"] = relationship(init=False)
-    option_id: Mapped[str] = mapped_column(ForeignKey("option.id"), init=False)
-    # answers: Mapped[list["Answer"]] = relationship(init=False)
-
-
-class Option(Base):
-    __tablename__ = "option"
-
-    # question_id: Mapped[str] = mapped_column(ForeignKey("question.id"), unique=True)
-    id: Mapped[str] = mapped_column(primary_key=True, default_factory=new_id)
     options: Mapped[list["OptionItem"]] = relationship(init=False)
     extra_options: Mapped[list["ExtraOptionItem"]] = relationship(init=False)
+    # answers: Mapped[list["Answer"]] = relationship(init=False)
 
 
 class OptionItem(Base):
     __tablename__ = "option_item"
 
-    option_id: Mapped[str] = mapped_column(
-        ForeignKey("option.id"), primary_key=True, init=False
+    question_id: Mapped[str] = mapped_column(
+        ForeignKey("question.id"), primary_key=True, init=False
     )
-    text: Mapped[str] = mapped_column(
-        primary_key=True,
-    )
+    text: Mapped[str] = mapped_column(primary_key=True)
 
 
 class ExtraOptionItem(Base):
     __tablename__ = "extra_option_item"
 
-    option_id: Mapped[str] = mapped_column(
-        ForeignKey("option.id"), primary_key=True, init=False
+    question_id: Mapped[str] = mapped_column(
+        ForeignKey("question.id"), primary_key=True, init=False
     )
-    text: Mapped[str] = mapped_column(
-        primary_key=True,
+    text: Mapped[str] = mapped_column(primary_key=True)
+
+
+class Answer(Base):
+    __tablename__ = "answer"
+
+    question_id: Mapped[str] = mapped_column(ForeignKey("question.id"))
+    id: Mapped[str] = mapped_column(primary_key=True, default_factory=new_id)
+    created_by: Mapped[str] = mapped_column(ForeignKey("user.id"), init=False)
+    answer: Mapped[list["AnswerItem"]] = relationship(init=False)
+    # extra_options: Mapped[list["ExtraAnswerItem"]] = relationship(init=False)
+
+
+class AnswerItem(Base):
+    __tablename__ = "answer_item"
+
+    answer_id: Mapped[str] = mapped_column(
+        ForeignKey("answer.id"), primary_key=True, init=False
     )
+    left: Mapped[str] = mapped_column(primary_key=True)
+    right: Mapped[str] = mapped_column(primary_key=True)
 
 
-# class Answer(Base):
-#     __tablename__ = "answer"
-
-#     question_id: Mapped[str] = mapped_column(
-#         ForeignKey("question.id"), primary_key=True
-#     )
-#     id: Mapped[str] = mapped_column(primary_key=True, default_factory=new_id)
-#     created_by: Mapped[str] = mapped_column(
-#         ForeignKey("user.id"), init=False, primary_key=True
-#     )
-
-
-# class AnswerItem(Base):
-#     __tablename__ = "answer_item"
+# class ExtraAnswerItem(Base):
+#     __tablename__ = "extra_answer_item"
 
 #     answer_id: Mapped[str] = mapped_column(ForeignKey("answer.id"), primary_key=True)
-#     option: Mapped[str] = mapped_column(primary_key=True)
-#     extra_option: Mapped[str] = mapped_column(primary_key=True)
+#     text: Mapped[str] = mapped_column(primary_key=True)
 
 
 # class Tag(Base):
