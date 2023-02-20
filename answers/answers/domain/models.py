@@ -11,6 +11,12 @@ class QuestionType(enum.StrEnum):
 
 
 @enum.unique
+class AnswerCheckStatus(enum.StrEnum):
+    CHECKED = "CHECKED"
+    UNCHECKED = "UNCHECKED"
+
+
+@enum.unique
 class TagsType(enum.StrEnum):
     IS_CORRECT = "IS_CORRECT"
 
