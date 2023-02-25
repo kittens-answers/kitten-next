@@ -42,6 +42,7 @@ async def test_exist_reverse(
         )
         test_answer_dto.answer.reverse()
         res = await get(dto=test_answer_dto, session=session)
+        print(res)
         assert res is not None
         assert res.id == answer_in_db.id
 

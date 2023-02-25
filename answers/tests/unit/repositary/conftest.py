@@ -5,7 +5,7 @@ from answers.adapters.db import BootStrap, DBSettings
 from answers.adapters.db.db_models import User
 from answers.domain.commands import CreateQuestion, CreateAnswer
 from answers.domain.models import QuestionType
-from answers.adapters.db.question import create as create_question
+from answers.adapters.repository.sql_alchemy import SQLAlchemyQuestionRepository
 
 pytestmark = pytest.mark.anyio
 
@@ -50,7 +50,6 @@ async def question_id(
     user_in_db: User,
 ):
     async with sqlite_memory_session_maker() as session:
-        question = await create_question(
-            dto=test_question_dto, user_id=user_in_db.id, session=session
-        )
+        rep = SQLAlchemyQuestionRepository(session=session)
+        question = await rep.create(dto=test_question_dto, user_id=user_in_db.id)
     return question.id

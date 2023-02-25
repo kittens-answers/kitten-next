@@ -1,8 +1,7 @@
-from sqlalchemy import func, select, and_
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
-from answers.adapters.db.db_models import Answer, AnswerItem
+from answers.adapters.db.db_models import Answer, AnswerDict
 
 
 from answers.domain.commands import CreateAnswer
@@ -11,29 +10,21 @@ from answers.domain.commands import CreateAnswer
 async def get(dto: CreateAnswer, session: AsyncSession) -> Answer | None:
     stmt = (
         select(Answer)
-        .limit(1)
-        .where(Answer.question_id == dto.question_id)
-        .join(AnswerItem, full=True)
-        .options(selectinload(Answer.answer))
-        .group_by(Answer.answer)
-        .having(func.count(AnswerItem.left) == len(dto.answer))
         .where(
-            *(
-                Answer.answer.any(
-                    and_(AnswerItem.left == left, AnswerItem.right == right)
-                )
-                for (left, right) in dto.answer
-            )
+            Answer.question_id == dto.question_id,
+            Answer.answer == AnswerDict(sorted(dto.answer)),
         )
+        .limit(1)
     )
-    return (await session.execute(stmt)).scalars().first()
+    return (await session.scalars(stmt)).first()
 
 
 async def create(dto: CreateAnswer, user_id: str, session: AsyncSession) -> Answer:
-    answer = Answer(question_id=dto.question_id)
+    answer = Answer(
+        question_id=dto.question_id,
+        answer=AnswerDict(sorted(dto.answer)),
+    )
     answer.created_by = user_id
-    for (left, right) in dto.answer:
-        answer.answer.append(AnswerItem(left=left, right=right))
     session.add(answer)
     await session.commit()
     return answer
