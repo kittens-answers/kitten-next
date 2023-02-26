@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, JSON
+from sqlalchemy import ForeignKey, JSON, UniqueConstraint
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
@@ -31,6 +31,7 @@ class User(Base):
 
 class Question(Base):
     __tablename__ = "question"
+    __table_args__ = (UniqueConstraint("text", "question_type", "options"),)
 
     text: Mapped[str] = mapped_column()
     question_type: Mapped[QuestionType] = mapped_column()
@@ -44,6 +45,6 @@ class Answer(Base):
     __tablename__ = "answer"
 
     question_id: Mapped[str] = mapped_column(ForeignKey("question.id"))
-    answer: Mapped[AnswerDict] = mapped_column(JSON)
+    answer: Mapped[AnswerDict] = mapped_column(JSON, unique=True)
     id: Mapped[str] = mapped_column(primary_key=True, default_factory=new_id)
     created_by: Mapped[str] = mapped_column(ForeignKey("user.id"), init=False)

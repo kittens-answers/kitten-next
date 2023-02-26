@@ -26,6 +26,7 @@ class AbstractUOW(abc.ABC):
     async def rollback(self):
         ...
 
+
 class SQLAlchemyUOW(AbstractUOW):
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self.session = session_factory()

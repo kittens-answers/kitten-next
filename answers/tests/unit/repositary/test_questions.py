@@ -6,6 +6,7 @@ from answers.domain.commands import CreateQuestion
 from answers.domain.models import QuestionType
 from answers.domain.specification import TextContains
 from answers.adapters.repository.sql_alchemy import SQLAlchemyQuestionRepository
+from sqlalchemy.exc import IntegrityError
 
 pytestmark = pytest.mark.anyio
 
@@ -133,3 +134,15 @@ async def test_list(
         q_list = await rep.list([TextContains(q=test_question_dto.question_text[:1])])
         assert len(q_list) == 1
         assert q_list[0].id == q1.id
+
+
+async def test_unique(
+    sqlite_memory_session_maker: async_sessionmaker[AsyncSession],
+    test_question_dto: CreateQuestion,
+    user_in_db: User,
+):
+    async with sqlite_memory_session_maker() as session:
+        rep = SQLAlchemyQuestionRepository(session=session)
+        await rep.create(dto=test_question_dto, user_id=user_in_db.id)
+        with pytest.raises(IntegrityError):
+            await rep.create(dto=test_question_dto, user_id=user_in_db.id)
