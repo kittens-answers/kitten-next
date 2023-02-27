@@ -1,9 +1,9 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-from answers.adapters.db.db_models import User
-from answers.domain.commands import CreateAnswer
-from answers.adapters.repository.sql_alchemy import SQLAlchemyAnswerRepository
 
+from answers.adapters.db.db_models import User
+from answers.adapters.repository.sql_alchemy import SQLAlchemyAnswerRepository
+from answers.domain.commands import CreateAnswer
 
 pytestmark = pytest.mark.anyio
 

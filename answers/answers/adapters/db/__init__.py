@@ -1,7 +1,8 @@
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, AsyncEngine
+from dataclasses import dataclass
+
+from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 
 from answers.adapters.db.db_models import Base
-from dataclasses import dataclass
 
 
 @dataclass

@@ -1,12 +1,12 @@
 import pytest
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from answers.adapters.db.db_models import User
+from answers.adapters.repository.sql_alchemy import SQLAlchemyQuestionRepository
 from answers.domain.commands import CreateQuestion
 from answers.domain.models import QuestionType
 from answers.domain.specification import TextContains
-from answers.adapters.repository.sql_alchemy import SQLAlchemyQuestionRepository
-from sqlalchemy.exc import IntegrityError
 
 pytestmark = pytest.mark.anyio
 

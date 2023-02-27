@@ -3,9 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from answers.adapters.db import BootStrap, DBSettings
 from answers.adapters.db.db_models import User
-from answers.domain.commands import CreateQuestion, CreateAnswer
+from answers.adapters.repository.sql_alchemy import (
+    SQLAlchemyQuestionRepository,
+    SQLAlchemyRepository,
+)
+from answers.domain.commands import CreateAnswer, CreateQuestion
 from answers.domain.models import QuestionType
-from answers.adapters.repository.sql_alchemy import SQLAlchemyQuestionRepository
 
 pytestmark = pytest.mark.anyio
 
@@ -17,6 +20,12 @@ async def sqlite_memory_session_maker():
     session = await bootstrap.start()
     yield session
     await bootstrap.stop()
+
+
+@pytest.fixture
+async def sql_repository(sqlite_memory_session_maker: async_sessionmaker[AsyncSession]):
+    rep = SQLAlchemyRepository(session_factory=sqlite_memory_session_maker)
+    return rep
 
 
 @pytest.fixture
@@ -35,11 +44,12 @@ def test_answer_dto(question_id: str):
 
 
 @pytest.fixture
-async def user_in_db(sqlite_memory_session_maker: async_sessionmaker[AsyncSession]):
-    async with sqlite_memory_session_maker() as session:
-        user = User(id="user_in_db")
-        session.add(user)
-        await session.commit()
+async def user_in_db(
+    sql_repository: SQLAlchemyRepository,
+):
+    async with sql_repository:
+        user = await sql_repository.users.create(user_id="user_in_db")
+        await sql_repository.commit()
     return user
 
 

@@ -1,9 +1,10 @@
 import abc
+from types import TracebackType
+from typing import Sequence
 
 from answers.domain import models
-from answers.domain.commands import CreateQuestion, CreateAnswer
+from answers.domain.commands import CreateAnswer, CreateQuestion
 from answers.domain.specification import Specification
-from typing import Sequence
 
 
 class AbstractQuestionRepository(abc.ABC):  # pragma: no cover
@@ -49,4 +50,29 @@ class AbstractAnswerRepository(abc.ABC):  # pragma: no cover
 
     @abc.abstractmethod
     async def get_or_create(self, dto: CreateAnswer, user_id: str) -> models.Answer:
+        ...
+
+
+class AbstractRepository(abc.ABC):  # pragma: no cover
+    users: AbstractUserRepository
+    questions: AbstractQuestionRepository
+    answers: AbstractAnswerRepository
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ):
+        await self.rollback()
+
+    @abc.abstractmethod
+    async def commit(self):
+        ...
+
+    @abc.abstractmethod
+    async def rollback(self):
         ...

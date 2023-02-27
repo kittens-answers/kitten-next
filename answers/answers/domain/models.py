@@ -23,7 +23,7 @@ class TagsType(enum.StrEnum):
 
 @dataclass(frozen=True)
 class User:
-    user_id: str
+    id: str
 
 
 @dataclass(frozen=True)

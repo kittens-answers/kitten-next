@@ -1,12 +1,13 @@
 from typing import Sequence
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from answers.adapters.db import db_models
 from answers.adapters.repository import (
     AbstractAnswerRepository,
     AbstractQuestionRepository,
+    AbstractRepository,
     AbstractUserRepository,
 )
 from answers.domain import models
@@ -58,7 +59,7 @@ class SQLAlchemyQuestionRepository(AbstractQuestionRepository):
         )
         question.created_by = user_id
         self.session.add(question)
-        await self.session.commit()
+        await self.session.flush()
         return self._from_db_model(question)
 
     async def get_or_create(self, dto: CreateQuestion, user_id: str) -> models.Question:
@@ -84,7 +85,7 @@ class SQLAlchemyUserRepository(AbstractUserRepository):
 
     @staticmethod
     def _from_db_model(user: db_models.User) -> models.User:
-        return models.User(user_id=user.id)
+        return models.User(id=user.id)
 
     async def get(self, user_id: str) -> models.User | None:
         user = await self.session.get(db_models.User, user_id)
@@ -96,7 +97,7 @@ class SQLAlchemyUserRepository(AbstractUserRepository):
     async def create(self, user_id: str) -> models.User:
         user = db_models.User(id=user_id)
         self.session.add(user)
-        await self.session.commit()
+        await self.session.flush()
         return self._from_db_model(user)
 
     async def get_or_create(self, user_id: str) -> models.User:
@@ -141,7 +142,7 @@ class SQLAlchemyAnswerRepository(AbstractAnswerRepository):
         )
         answer.created_by = user_id
         self.session.add(answer)
-        await self.session.commit()
+        await self.session.flush()
         return self._from_db_model(answer)
 
     async def get_or_create(self, dto: CreateAnswer, user_id: str) -> models.Answer:
@@ -149,3 +150,21 @@ class SQLAlchemyAnswerRepository(AbstractAnswerRepository):
         if answer is None:
             answer = await self.create(dto=dto, user_id=user_id)
         return answer
+
+
+class SQLAlchemyRepository(AbstractRepository):
+    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+        self._session = session_factory()
+        self.users = SQLAlchemyUserRepository(session=self._session)
+        self.questions = SQLAlchemyQuestionRepository(session=self._session)
+        self.answers = SQLAlchemyAnswerRepository(session=self._session)
+
+    async def __aenter__(self):
+        self._session.begin()
+        return self
+
+    async def commit(self):
+        await self._session.commit()
+
+    async def rollback(self):
+        await self._session.rollback()

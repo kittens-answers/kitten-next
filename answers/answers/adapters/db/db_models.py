@@ -1,14 +1,10 @@
-from sqlalchemy import ForeignKey, JSON, UniqueConstraint
-from sqlalchemy.orm import (
-    DeclarativeBase,
-    Mapped,
-    MappedAsDataclass,
-    mapped_column,
-)
+from typing import TypedDict
+
+from sqlalchemy import JSON, ForeignKey, UniqueConstraint
+from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, mapped_column
 
 from answers.adapters.db.utils import new_id
 from answers.domain.models import QuestionType
-from typing import TypedDict
 
 
 class OptionDict(TypedDict):

@@ -1,5 +1,6 @@
-from answers.domain.commands import CreateQuestion, QuestionType
 import pytest
+
+from answers.domain.commands import CreateQuestion, QuestionType
 
 
 @pytest.mark.parametrize(
