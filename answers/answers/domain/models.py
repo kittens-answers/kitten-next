@@ -11,12 +11,6 @@ class QuestionType(enum.StrEnum):
 
 
 @enum.unique
-class AnswerCheckStatus(enum.StrEnum):
-    CHECKED = "CHECKED"
-    UNCHECKED = "UNCHECKED"
-
-
-@enum.unique
 class TagsType(enum.StrEnum):
     IS_CORRECT = "IS_CORRECT"
 
@@ -31,21 +25,23 @@ class Question:
     text: str
     question_type: QuestionType
     created_by: str
-    id: str | None
+    id: str
     options: frozenset[str]
     extra_options: frozenset[str]
 
 
 @dataclass(frozen=True)
 class Answer:
-    answer_id: str
+    id: str
     question_id: str
     answer: tuple[tuple[str, str], ...]
     created_by: str
 
 
-# @dataclass(frozen=True)
-# class Tag:
-#     answer_id: str
-#     tag_name: TagsType
-#     value: str
+@dataclass(frozen=True)
+class AnswerTag:
+    id: str
+    answer_id: str
+    user_id: str
+    tag_name: TagsType
+    value: str

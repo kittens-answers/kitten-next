@@ -6,13 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from answers.adapters.db import db_models
 from answers.adapters.repository import (
     AbstractAnswerRepository,
+    AbstractAnswerTagRepository,
     AbstractQuestionRepository,
     AbstractRepository,
     AbstractUserRepository,
 )
-from answers.domain import models
-from answers.domain.commands import CreateAnswer, CreateQuestion
-from answers.domain.specification import Specification, TextContains
+from answers.domain import commands, models
+from answers.domain.specifications import Specification, TextContains
 
 
 class SQLAlchemyQuestionRepository(AbstractQuestionRepository):
@@ -30,7 +30,7 @@ class SQLAlchemyQuestionRepository(AbstractQuestionRepository):
             extra_options=frozenset(question.options["extra_options"]),
         )
 
-    async def get(self, dto: CreateQuestion) -> models.Question | None:
+    async def get(self, dto: commands.CreateQuestion) -> models.Question | None:
         stmt = (
             select(db_models.Question)
             .where(
@@ -49,23 +49,23 @@ class SQLAlchemyQuestionRepository(AbstractQuestionRepository):
         else:
             return self._from_db_model(question)
 
-    async def create(self, dto: CreateQuestion, user_id: str) -> models.Question:
+    async def create(self, dto: commands.CreateQuestion) -> models.Question:
         question = db_models.Question(
             text=dto.question_text,
             question_type=dto.question_type,
             options=db_models.OptionDict(
                 options=sorted(dto.options), extra_options=sorted(dto.extra_options)
             ),
+            created_by=dto.user_id,
         )
-        question.created_by = user_id
         self.session.add(question)
         await self.session.flush()
         return self._from_db_model(question)
 
-    async def get_or_create(self, dto: CreateQuestion, user_id: str) -> models.Question:
+    async def get_or_create(self, dto: commands.CreateQuestion) -> models.Question:
         question = await self.get(dto=dto)
         if question is None:
-            question = await self.create(dto=dto, user_id=user_id)
+            question = await self.create(dto=dto)
         return question
 
     async def list(self, specs: list[Specification]) -> Sequence[models.Question]:
@@ -87,23 +87,23 @@ class SQLAlchemyUserRepository(AbstractUserRepository):
     def _from_db_model(user: db_models.User) -> models.User:
         return models.User(id=user.id)
 
-    async def get(self, user_id: str) -> models.User | None:
-        user = await self.session.get(db_models.User, user_id)
+    async def get(self, dto: commands.CreateUser) -> models.User | None:
+        user = await self.session.get(db_models.User, dto.user_id)
         if user is None:
             return
         else:
             return self._from_db_model(user)
 
-    async def create(self, user_id: str) -> models.User:
-        user = db_models.User(id=user_id)
+    async def create(self, dto: commands.CreateUser) -> models.User:
+        user = db_models.User(id=dto.user_id)
         self.session.add(user)
         await self.session.flush()
         return self._from_db_model(user)
 
-    async def get_or_create(self, user_id: str) -> models.User:
-        user = await self.get(user_id=user_id)
+    async def get_or_create(self, dto: commands.CreateUser) -> models.User:
+        user = await self.get(dto=dto)
         if user is None:
-            user = await self.create(user_id=user_id)
+            user = await self.create(dto=dto)
         return user
 
 
@@ -114,13 +114,13 @@ class SQLAlchemyAnswerRepository(AbstractAnswerRepository):
     @staticmethod
     def _from_db_model(answer: db_models.Answer) -> models.Answer:
         return models.Answer(
-            answer_id=answer.id,
+            id=answer.id,
             question_id=answer.question_id,
             answer=tuple(answer.answer.items()),
             created_by=answer.created_by,
         )
 
-    async def get(self, dto: CreateAnswer) -> models.Answer | None:
+    async def get(self, dto: commands.CreateAnswer) -> models.Answer | None:
         stmt = (
             select(db_models.Answer)
             .where(
@@ -135,21 +135,81 @@ class SQLAlchemyAnswerRepository(AbstractAnswerRepository):
         else:
             return self._from_db_model(answer)
 
-    async def create(self, dto: CreateAnswer, user_id: str) -> models.Answer:
+    async def create(self, dto: commands.CreateAnswer) -> models.Answer:
         answer = db_models.Answer(
             question_id=dto.question_id,
             answer=db_models.AnswerDict(sorted(dto.answer)),
+            created_by=dto.user_id,
         )
-        answer.created_by = user_id
+        answer.created_by = dto.user_id
         self.session.add(answer)
         await self.session.flush()
         return self._from_db_model(answer)
 
-    async def get_or_create(self, dto: CreateAnswer, user_id: str) -> models.Answer:
+    async def get_or_create(self, dto: commands.CreateAnswer) -> models.Answer:
         answer = await self.get(dto=dto)
         if answer is None:
-            answer = await self.create(dto=dto, user_id=user_id)
+            answer = await self.create(dto=dto)
         return answer
+
+
+class SQLAlchemyAnswerTagRepository(AbstractAnswerTagRepository):
+    def __init__(self, session: AsyncSession) -> None:
+        self.session = session
+
+    @staticmethod
+    def _from_db_model(tag: db_models.AnswerTag) -> models.AnswerTag:
+        return models.AnswerTag(
+            id=tag.id,
+            answer_id=tag.answer_id,
+            user_id=tag.created_by,
+            tag_name=tag.tag_name,
+            value=tag.value,
+        )
+
+    async def get(self, dto: commands.CreateTag) -> models.AnswerTag | None:
+        stmt = (
+            select(db_models.AnswerTag)
+            .where(
+                db_models.AnswerTag.answer_id == dto.answer_id,
+                db_models.AnswerTag.created_by == dto.user_id,
+                db_models.AnswerTag.tag_name == dto.tag_name,
+            )
+            .limit(1)
+        )
+        tag = (await self.session.scalars(stmt)).first()
+        if tag is not None:
+            return self._from_db_model(tag)
+
+    async def create(self, dto: commands.CreateTag) -> models.AnswerTag:
+        tag = db_models.AnswerTag(
+            answer_id=dto.answer_id,
+            tag_name=dto.tag_name,
+            value=dto.value,
+            created_by=dto.user_id,
+        )
+        self.session.add(tag)
+        await self.session.flush()
+        return self._from_db_model(tag)
+
+    async def create_or_update(self, dto: commands.CreateTag) -> models.AnswerTag:
+        stmt = (
+            select(db_models.AnswerTag)
+            .where(
+                db_models.AnswerTag.answer_id == dto.answer_id,
+                db_models.AnswerTag.created_by == dto.user_id,
+                db_models.AnswerTag.tag_name == dto.tag_name,
+            )
+            .limit(1)
+        )
+        tag = (await self.session.scalars(stmt)).first()
+        if tag is None:
+            return await self.create(dto)
+        elif tag.value != dto.value:
+            tag.value = dto.value
+            self.session.add(tag)
+            await self.session.flush()
+        return self._from_db_model(tag)
 
 
 class SQLAlchemyRepository(AbstractRepository):
@@ -158,6 +218,7 @@ class SQLAlchemyRepository(AbstractRepository):
         self.users = SQLAlchemyUserRepository(session=self._session)
         self.questions = SQLAlchemyQuestionRepository(session=self._session)
         self.answers = SQLAlchemyAnswerRepository(session=self._session)
+        self.tags = SQLAlchemyAnswerTagRepository(session=self._session)
 
     async def __aenter__(self):
         self._session.begin()

@@ -4,7 +4,7 @@ from sqlalchemy import JSON, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, mapped_column
 
 from answers.adapters.db.utils import new_id
-from answers.domain.models import QuestionType
+from answers.domain.models import QuestionType, TagsType
 
 
 class OptionDict(TypedDict):
@@ -32,8 +32,8 @@ class Question(Base):
     text: Mapped[str] = mapped_column()
     question_type: Mapped[QuestionType] = mapped_column()
     options: Mapped[OptionDict] = mapped_column(JSON)
+    created_by: Mapped[str] = mapped_column(ForeignKey("user.id"))
     id: Mapped[str] = mapped_column(primary_key=True, default_factory=new_id)
-    created_by: Mapped[str] = mapped_column(ForeignKey("user.id"), init=False)
     # answers: Mapped[list["Answer"]] = relationship(init=False)
 
 
@@ -42,5 +42,16 @@ class Answer(Base):
 
     question_id: Mapped[str] = mapped_column(ForeignKey("question.id"))
     answer: Mapped[AnswerDict] = mapped_column(JSON, unique=True)
+    created_by: Mapped[str] = mapped_column(ForeignKey("user.id"))
     id: Mapped[str] = mapped_column(primary_key=True, default_factory=new_id)
-    created_by: Mapped[str] = mapped_column(ForeignKey("user.id"), init=False)
+
+
+class AnswerTag(Base):
+    __tablename__ = "answer_tag"
+    __table_args__ = (UniqueConstraint("answer_id", "created_by", "tag_name"),)
+
+    answer_id: Mapped[str] = mapped_column(ForeignKey("answer.id"))
+    created_by: Mapped[str] = mapped_column(ForeignKey("user.id"))
+    tag_name: Mapped[TagsType] = mapped_column()
+    value: Mapped[str] = mapped_column()
+    id: Mapped[str] = mapped_column(primary_key=True, default_factory=new_id)

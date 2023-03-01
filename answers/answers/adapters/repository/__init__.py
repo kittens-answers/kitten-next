@@ -2,22 +2,21 @@ import abc
 from types import TracebackType
 from typing import Sequence
 
-from answers.domain import models
-from answers.domain.commands import CreateAnswer, CreateQuestion
-from answers.domain.specification import Specification
+from answers.domain import commands, models
+from answers.domain.specifications import Specification
 
 
 class AbstractQuestionRepository(abc.ABC):  # pragma: no cover
     @abc.abstractmethod
-    async def get(self, dto: CreateQuestion) -> models.Question | None:
+    async def get(self, dto: commands.CreateQuestion) -> models.Question | None:
         ...
 
     @abc.abstractmethod
-    async def create(self, dto: CreateQuestion, user_id: str) -> models.Question:
+    async def create(self, dto: commands.CreateQuestion) -> models.Question:
         ...
 
     @abc.abstractmethod
-    async def get_or_create(self, dto: CreateQuestion, user_id: str) -> models.Question:
+    async def get_or_create(self, dto: commands.CreateQuestion) -> models.Question:
         ...
 
     @abc.abstractmethod
@@ -27,29 +26,43 @@ class AbstractQuestionRepository(abc.ABC):  # pragma: no cover
 
 class AbstractUserRepository(abc.ABC):  # pragma: no cover
     @abc.abstractmethod
-    async def get(self, user_id: str) -> models.User | None:
+    async def get(self, dto: commands.CreateUser) -> models.User | None:
         ...
 
     @abc.abstractmethod
-    async def create(self, user_id: str) -> models.User:
+    async def create(self, dto: commands.CreateUser) -> models.User:
         ...
 
     @abc.abstractmethod
-    async def get_or_create(self, user_id: str) -> models.User:
+    async def get_or_create(self, dto: commands.CreateUser) -> models.User:
         ...
 
 
 class AbstractAnswerRepository(abc.ABC):  # pragma: no cover
     @abc.abstractmethod
-    async def get(self, dto: CreateAnswer) -> models.Answer | None:
+    async def get(self, dto: commands.CreateAnswer) -> models.Answer | None:
         ...
 
     @abc.abstractmethod
-    async def create(self, dto: CreateAnswer, user_id: str) -> models.Answer:
+    async def create(self, dto: commands.CreateAnswer) -> models.Answer:
         ...
 
     @abc.abstractmethod
-    async def get_or_create(self, dto: CreateAnswer, user_id: str) -> models.Answer:
+    async def get_or_create(self, dto: commands.CreateAnswer) -> models.Answer:
+        ...
+
+
+class AbstractAnswerTagRepository(abc.ABC):  # pragma: no cover
+    @abc.abstractmethod
+    async def get(self, dto: commands.CreateTag) -> models.AnswerTag | None:
+        ...
+
+    @abc.abstractmethod
+    async def create(self, dto: commands.CreateTag) -> models.AnswerTag:
+        ...
+
+    @abc.abstractmethod
+    async def create_or_update(self, dto: commands.CreateTag) -> models.AnswerTag:
         ...
 
 
@@ -57,6 +70,7 @@ class AbstractRepository(abc.ABC):  # pragma: no cover
     users: AbstractUserRepository
     questions: AbstractQuestionRepository
     answers: AbstractAnswerRepository
+    tags: AbstractAnswerTagRepository
 
     async def __aenter__(self):
         return self
