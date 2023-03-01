@@ -6,6 +6,7 @@
         "selectinload",
         "sessionmaker",
         "shortuuid",
-        "sqlalchemy"
+        "sqlalchemy",
+        "usefixtures"
     ]
 }
