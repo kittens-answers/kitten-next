@@ -103,9 +103,12 @@ async def test_get_or_create_twice(
     question_in_db: Question,
 ):
     async with repository:
-        question = await repository.questions.get_or_create(dto=question_dto)
+        question, is_created = await repository.questions.get_or_create(
+            dto=question_dto
+        )
         await repository.commit()
 
+    assert is_created is False
     assert question_in_db.id == question.id
     assert question_in_db.created_by == question.created_by
 
@@ -116,7 +119,7 @@ async def test_list(
 ):
     async with repository:
         assert len(await repository.questions.list([])) == 0
-        q1 = await repository.questions.get_or_create(dto=question_dto)
+        q1 = await repository.questions.create(dto=question_dto)
         await repository.commit()
 
         q_list = await repository.questions.list(

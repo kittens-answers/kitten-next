@@ -49,8 +49,10 @@ async def test_get_or_create_if_exist(
     answer_in_db: Answer,
 ):
     async with repository:
-        answer = await repository.answers.get_or_create(dto=answer_dto)
+        answer, is_created = await repository.answers.get_or_create(dto=answer_dto)
+        await repository.commit()
 
+    assert is_created is False
     assert answer_in_db.id == answer.id
 
 
@@ -59,6 +61,8 @@ async def test_get_or_create_empty(
     answer_dto: CreateAnswer,
 ):
     async with repository:
-        answer = await repository.answers.get_or_create(dto=answer_dto)
+        answer, is_created = await repository.answers.get_or_create(dto=answer_dto)
+        await repository.commit()
 
+    assert is_created is True
     assert answer is not None

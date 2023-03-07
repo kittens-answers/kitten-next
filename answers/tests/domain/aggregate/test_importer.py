@@ -1,7 +1,7 @@
 import pytest
 
 from answers.adapters.repository import AbstractRepository
-from answers.domain.aggregate import Importer
+from answers.domain.aggregate import QuestionWithAnswer
 from answers.domain.commands import ImportQAT, QuestionType
 
 pytestmark = pytest.mark.anyio
@@ -9,11 +9,11 @@ pytestmark = pytest.mark.anyio
 
 @pytest.fixture
 def importer(repository: AbstractRepository):
-    return Importer(repository=repository)
+    return QuestionWithAnswer(repository=repository)
 
 
-async def test_import(importer: Importer):
-    await importer.import_qat(
+async def test_import(importer: QuestionWithAnswer):
+    res = await importer.import_qat(
         dto=ImportQAT(
             user_id="user",
             question_text="how?",
@@ -24,3 +24,5 @@ async def test_import(importer: Importer):
             is_correct=True,
         )
     )
+
+    assert res == (True, True, True, True)

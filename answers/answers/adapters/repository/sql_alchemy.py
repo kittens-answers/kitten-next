@@ -62,12 +62,6 @@ class SQLAlchemyQuestionRepository(AbstractQuestionRepository):
         await self.session.flush()
         return self._from_db_model(question)
 
-    async def get_or_create(self, dto: commands.CreateQuestion) -> models.Question:
-        question = await self.get(dto=dto)
-        if question is None:
-            question = await self.create(dto=dto)
-        return question
-
     async def list(self, specs: list[Specification]) -> Sequence[models.Question]:
         stmt = select(db_models.Question)
         for spec in specs:
@@ -99,12 +93,6 @@ class SQLAlchemyUserRepository(AbstractUserRepository):
         self.session.add(user)
         await self.session.flush()
         return self._from_db_model(user)
-
-    async def get_or_create(self, dto: commands.CreateUser) -> models.User:
-        user = await self.get(dto=dto)
-        if user is None:
-            user = await self.create(dto=dto)
-        return user
 
 
 class SQLAlchemyAnswerRepository(AbstractAnswerRepository):
@@ -146,12 +134,6 @@ class SQLAlchemyAnswerRepository(AbstractAnswerRepository):
         await self.session.flush()
         return self._from_db_model(answer)
 
-    async def get_or_create(self, dto: commands.CreateAnswer) -> models.Answer:
-        answer = await self.get(dto=dto)
-        if answer is None:
-            answer = await self.create(dto=dto)
-        return answer
-
 
 class SQLAlchemyAnswerTagRepository(AbstractAnswerTagRepository):
     def __init__(self, session: AsyncSession) -> None:
@@ -190,25 +172,6 @@ class SQLAlchemyAnswerTagRepository(AbstractAnswerTagRepository):
         )
         self.session.add(tag)
         await self.session.flush()
-        return self._from_db_model(tag)
-
-    async def create_or_update(self, dto: commands.CreateTag) -> models.AnswerTag:
-        stmt = (
-            select(db_models.AnswerTag)
-            .where(
-                db_models.AnswerTag.answer_id == dto.answer_id,
-                db_models.AnswerTag.created_by == dto.user_id,
-                db_models.AnswerTag.tag_name == dto.tag_name,
-            )
-            .limit(1)
-        )
-        tag = (await self.session.scalars(stmt)).first()
-        if tag is None:
-            return await self.create(dto)
-        elif tag.value != dto.value:
-            tag.value = dto.value
-            self.session.add(tag)
-            await self.session.flush()
         return self._from_db_model(tag)
 
 

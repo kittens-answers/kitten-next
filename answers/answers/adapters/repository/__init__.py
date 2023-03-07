@@ -15,9 +15,15 @@ class AbstractQuestionRepository(abc.ABC):  # pragma: no cover
     async def create(self, dto: commands.CreateQuestion) -> models.Question:
         ...
 
-    @abc.abstractmethod
-    async def get_or_create(self, dto: commands.CreateQuestion) -> models.Question:
-        ...
+    async def get_or_create(
+        self, dto: commands.CreateQuestion
+    ) -> tuple[models.Question, bool]:
+        question = await self.get(dto=dto)
+        if question:
+            return (question, False)
+        else:
+            question = await self.create(dto=dto)
+            return (question, True)
 
     @abc.abstractmethod
     async def list(self, specs: list[Specification]) -> Sequence[models.Question]:
@@ -33,9 +39,13 @@ class AbstractUserRepository(abc.ABC):  # pragma: no cover
     async def create(self, dto: commands.CreateUser) -> models.User:
         ...
 
-    @abc.abstractmethod
-    async def get_or_create(self, dto: commands.CreateUser) -> models.User:
-        ...
+    async def get_or_create(self, dto: commands.CreateUser) -> tuple[models.User, bool]:
+        user = await self.get(dto=dto)
+        if user:
+            return (user, False)
+        else:
+            user = await self.create(dto=dto)
+            return (user, True)
 
 
 class AbstractAnswerRepository(abc.ABC):  # pragma: no cover
@@ -47,9 +57,15 @@ class AbstractAnswerRepository(abc.ABC):  # pragma: no cover
     async def create(self, dto: commands.CreateAnswer) -> models.Answer:
         ...
 
-    @abc.abstractmethod
-    async def get_or_create(self, dto: commands.CreateAnswer) -> models.Answer:
-        ...
+    async def get_or_create(
+        self, dto: commands.CreateAnswer
+    ) -> tuple[models.Answer, bool]:
+        answer = await self.get(dto=dto)
+        if answer:
+            return (answer, False)
+        else:
+            answer = await self.create(dto=dto)
+            return (answer, True)
 
 
 class AbstractAnswerTagRepository(abc.ABC):  # pragma: no cover
@@ -61,9 +77,15 @@ class AbstractAnswerTagRepository(abc.ABC):  # pragma: no cover
     async def create(self, dto: commands.CreateTag) -> models.AnswerTag:
         ...
 
-    @abc.abstractmethod
-    async def create_or_update(self, dto: commands.CreateTag) -> models.AnswerTag:
-        ...
+    async def get_or_create(
+        self, dto: commands.CreateTag
+    ) -> tuple[models.AnswerTag, bool]:
+        tag = await self.get(dto=dto)
+        if tag:
+            return (tag, False)
+        else:
+            tag = await self.create(dto=dto)
+            return (tag, True)
 
 
 class AbstractRepository(abc.ABC):  # pragma: no cover
