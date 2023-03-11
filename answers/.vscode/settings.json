@@ -1,7 +1,9 @@
 {
     "cSpell.words": [
         "aiosqlite",
+        "drivername",
         "joinedload",
+        "pydantic",
         "pytestmark",
         "selectinload",
         "sessionmaker",
