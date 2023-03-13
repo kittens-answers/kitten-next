@@ -2,6 +2,7 @@
     "cSpell.words": [
         "aiosqlite",
         "drivername",
+        "fastapi",
         "joinedload",
         "pydantic",
         "pytestmark",
@@ -9,6 +10,7 @@
         "sessionmaker",
         "shortuuid",
         "sqlalchemy",
+        "typer",
         "usefixtures"
     ]
 }
