@@ -15,6 +15,10 @@ class AbstractQuestionRepository(abc.ABC):  # pragma: no cover
     async def create(self, dto: commands.CreateQuestion) -> models.Question:
         ...
 
+    @abc.abstractmethod
+    async def insert(self, model: models.Question):
+        ...
+
     async def get_or_create(
         self, dto: commands.CreateQuestion
     ) -> tuple[models.Question, bool]:
@@ -39,6 +43,14 @@ class AbstractUserRepository(abc.ABC):  # pragma: no cover
     async def create(self, dto: commands.CreateUser) -> models.User:
         ...
 
+    @abc.abstractmethod
+    async def list(self, specs: list[Specification]) -> Sequence[models.User]:
+        ...
+
+    @abc.abstractmethod
+    async def insert(self, model: models.User):
+        ...
+
     async def get_or_create(self, dto: commands.CreateUser) -> tuple[models.User, bool]:
         user = await self.get(dto=dto)
         if user:
@@ -55,6 +67,14 @@ class AbstractAnswerRepository(abc.ABC):  # pragma: no cover
 
     @abc.abstractmethod
     async def create(self, dto: commands.CreateAnswer) -> models.Answer:
+        ...
+
+    @abc.abstractmethod
+    async def list(self, specs: list[Specification]) -> Sequence[models.Answer]:
+        ...
+
+    @abc.abstractmethod
+    async def insert(self, model: models.Answer):
         ...
 
     async def get_or_create(
@@ -75,6 +95,14 @@ class AbstractAnswerTagRepository(abc.ABC):  # pragma: no cover
 
     @abc.abstractmethod
     async def create(self, dto: commands.CreateTag) -> models.AnswerTag:
+        ...
+
+    @abc.abstractmethod
+    async def list(self, specs: list[Specification]) -> Sequence[models.AnswerTag]:
+        ...
+
+    @abc.abstractmethod
+    async def insert(self, model: models.AnswerTag):
         ...
 
     async def get_or_create(

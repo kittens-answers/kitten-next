@@ -42,6 +42,6 @@ class Answer:
 class AnswerTag:
     id: str
     answer_id: str
-    user_id: str
+    created_by: str
     tag_name: TagsType
     value: str

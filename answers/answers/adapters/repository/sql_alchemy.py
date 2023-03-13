@@ -72,6 +72,20 @@ class SQLAlchemyQuestionRepository(AbstractQuestionRepository):
         questions = (await self.session.scalars(stmt)).all()
         return tuple(map(self._from_db_model, questions))
 
+    async def insert(self, model: models.Question):
+        self.session.add(
+            db_models.Question(
+                text=model.text,
+                question_type=model.question_type,
+                options=db_models.OptionDict(
+                    options=sorted(list(model.options)),
+                    extra_options=sorted(list(model.extra_options)),
+                ),
+                created_by=model.created_by,
+                id=model.id,
+            )
+        )
+
 
 class SQLAlchemyUserRepository(AbstractUserRepository):
     def __init__(self, session: AsyncSession) -> None:
@@ -93,6 +107,14 @@ class SQLAlchemyUserRepository(AbstractUserRepository):
         self.session.add(user)
         await self.session.flush()
         return self._from_db_model(user)
+
+    async def list(self, specs: list[Specification]) -> Sequence[models.User]:
+        stmt = select(db_models.User)
+        users = (await self.session.scalars(stmt)).all()
+        return tuple(map(self._from_db_model, users))
+
+    async def insert(self, model: models.User):
+        self.session.add(db_models.User(id=model.id))
 
 
 class SQLAlchemyAnswerRepository(AbstractAnswerRepository):
@@ -134,6 +156,21 @@ class SQLAlchemyAnswerRepository(AbstractAnswerRepository):
         await self.session.flush()
         return self._from_db_model(answer)
 
+    async def list(self, specs: list[Specification]) -> Sequence[models.Answer]:
+        stmt = select(db_models.Answer)
+        answers = (await self.session.scalars(stmt)).all()
+        return tuple(map(self._from_db_model, answers))
+
+    async def insert(self, model: models.Answer):
+        self.session.add(
+            db_models.Answer(
+                question_id=model.question_id,
+                answer=db_models.AnswerDict(sorted(model.answer)),
+                created_by=model.created_by,
+                id=model.id,
+            )
+        )
+
 
 class SQLAlchemyAnswerTagRepository(AbstractAnswerTagRepository):
     def __init__(self, session: AsyncSession) -> None:
@@ -144,7 +181,7 @@ class SQLAlchemyAnswerTagRepository(AbstractAnswerTagRepository):
         return models.AnswerTag(
             id=tag.id,
             answer_id=tag.answer_id,
-            user_id=tag.created_by,
+            created_by=tag.created_by,
             tag_name=tag.tag_name,
             value=tag.value,
         )
@@ -173,6 +210,22 @@ class SQLAlchemyAnswerTagRepository(AbstractAnswerTagRepository):
         self.session.add(tag)
         await self.session.flush()
         return self._from_db_model(tag)
+
+    async def list(self, specs: list[Specification]) -> Sequence[models.AnswerTag]:
+        stmt = select(db_models.AnswerTag)
+        answer_tags = (await self.session.scalars(stmt)).all()
+        return tuple(map(self._from_db_model, answer_tags))
+
+    async def insert(self, model: models.AnswerTag):
+        self.session.add(
+            db_models.AnswerTag(
+                answer_id=model.answer_id,
+                created_by=model.created_by,
+                tag_name=model.tag_name,
+                value=model.value,
+                id=model.id,
+            )
+        )
 
 
 class SQLAlchemyRepository(AbstractRepository):

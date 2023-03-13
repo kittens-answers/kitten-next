@@ -39,9 +39,10 @@ class Question(Base):
 
 class Answer(Base):
     __tablename__ = "answer"
+    __table_args__ = (UniqueConstraint("question_id", "answer"),)
 
     question_id: Mapped[str] = mapped_column(ForeignKey("question.id"))
-    answer: Mapped[AnswerDict] = mapped_column(JSON, unique=True)
+    answer: Mapped[AnswerDict] = mapped_column(JSON)
     created_by: Mapped[str] = mapped_column(ForeignKey("user.id"))
     id: Mapped[str] = mapped_column(primary_key=True, default_factory=new_id)
 
