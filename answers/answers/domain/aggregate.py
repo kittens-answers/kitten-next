@@ -1,8 +1,8 @@
 from rich.progress import track
 from sqlalchemy.exc import IntegrityError
 
-from answers.adapters.repository import AbstractRepository
 from answers.domain import commands, models
+from answers.domain.abstract.repository import AbstractRepository
 
 
 class QuestionWithAnswer:

@@ -1,6 +1,6 @@
 import pytest
 
-from answers.adapters.repository import AbstractRepository
+from answers.domain.abstract.repository import AbstractRepository
 from answers.domain.commands import CreateUser
 from answers.domain.models import User
 

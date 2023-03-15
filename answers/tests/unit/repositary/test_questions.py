@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from answers.adapters.repository import AbstractRepository
+from answers.domain.abstract.repository import AbstractRepository
 from answers.domain.commands import CreateQuestion
 from answers.domain.models import Question, QuestionType
 from answers.domain.specifications import TextContains

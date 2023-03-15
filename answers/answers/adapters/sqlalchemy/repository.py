@@ -3,15 +3,15 @@ from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from answers.adapters.db import db_models
-from answers.adapters.repository import (
+from answers.adapters.sqlalchemy import db_models
+from answers.domain import commands, models
+from answers.domain.abstract.repository import (
     AbstractAnswerRepository,
     AbstractAnswerTagRepository,
     AbstractQuestionRepository,
     AbstractRepository,
     AbstractUserRepository,
 )
-from answers.domain import commands, models
 from answers.domain.specifications import Specification, TextContains
 
 

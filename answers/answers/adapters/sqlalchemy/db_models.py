@@ -3,8 +3,8 @@ from typing import TypedDict
 from sqlalchemy import JSON, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, mapped_column
 
-from answers.adapters.db.utils import new_id
 from answers.domain.models import QuestionType, TagsType
+from answers.domain.utils import new_id
 
 
 class OptionDict(TypedDict):

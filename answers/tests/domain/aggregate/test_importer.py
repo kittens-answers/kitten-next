@@ -1,6 +1,6 @@
 import pytest
 
-from answers.adapters.repository import AbstractRepository
+from answers.domain.abstract.repository import AbstractRepository
 from answers.domain.aggregate import QuestionWithAnswer
 from answers.domain.commands import ImportQAT, QuestionType
 

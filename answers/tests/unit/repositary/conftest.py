@@ -1,6 +1,6 @@
 import pytest
 
-from answers.adapters.repository.sql_alchemy import SQLAlchemyRepository
+from answers.adapters.sqlalchemy.repository import SQLAlchemyRepository
 from answers.domain.commands import CreateAnswer, CreateQuestion, CreateTag, CreateUser
 from answers.domain.models import (
     Answer,
