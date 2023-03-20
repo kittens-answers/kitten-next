@@ -1,5 +1,15 @@
 import enum
-from dataclasses import dataclass
+from typing import TypedDict
+
+from pydantic import BaseModel
+
+
+class OptionDict(TypedDict):
+    options: frozenset[str]
+    extra_options: frozenset[str]
+
+
+AnswerDict = dict[str, str]
 
 
 @enum.unique
@@ -15,31 +25,41 @@ class TagsType(enum.StrEnum):
     IS_CORRECT = "IS_CORRECT"
 
 
-@dataclass(frozen=True)
-class User:
+class User(BaseModel):
+    class Config:
+        orm_mode = True
+
     id: str
 
 
-@dataclass(frozen=True)
-class Question:
+class Question(BaseModel):
+    class Config:
+        json_encoders = {frozenset: lambda v: sorted(v)}
+        orm_mode = True
+
     text: str
     question_type: QuestionType
     created_by: str
     id: str
-    options: frozenset[str]
-    extra_options: frozenset[str]
+    options: OptionDict
+    # options: frozenset[str]
+    # extra_options: frozenset[str]
 
 
-@dataclass(frozen=True)
-class Answer:
+class Answer(BaseModel):
+    class Config:
+        orm_mode = True
+
     id: str
     question_id: str
-    answer: tuple[tuple[str, str], ...]
+    answer: AnswerDict
     created_by: str
 
 
-@dataclass(frozen=True)
-class AnswerTag:
+class AnswerTag(BaseModel):
+    class Config:
+        orm_mode = True
+
     id: str
     answer_id: str
     created_by: str

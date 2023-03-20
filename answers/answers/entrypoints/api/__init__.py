@@ -1,28 +1,17 @@
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 
-from answers.domain.aggregate import QuestionWithAnswer
 from answers.domain.bootstrap import BootStrap
-from answers.domain.specifications import TextContains
-
-boot = BootStrap()
+from answers.entrypoints.api import routers
 
 
 @asynccontextmanager
-async def lifespan(app):
-    async with boot:
+async def lifespan(app: FastAPI):
+    async with BootStrap() as boot:
+        app.state.boot = boot
         yield
 
 
 app = FastAPI(lifespan=lifespan)
-
-
-async def get_agr():
-    return await boot.get_qwa_aggregate()
-
-
-@app.post("/search")
-async def search(q: str, agr: QuestionWithAnswer = Depends(get_agr)):
-    async with agr.repository:
-        return await agr.repository.questions.list([TextContains(q=q)])
+app.include_router(router=routers.router)

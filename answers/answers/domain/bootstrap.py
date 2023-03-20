@@ -1,6 +1,7 @@
 from contextlib import AbstractAsyncContextManager
 from typing import Type
 
+from answers.adapters.json_file.database import JsonFileDB
 from answers.adapters.sqlalchemy.database import SQLAlchemyDB
 from answers.domain.abstract.database import AbstractDB
 from answers.domain.aggregate import QuestionWithAnswer
@@ -16,6 +17,8 @@ class BootStrap(AbstractAsyncContextManager):
             match settings.db_type:
                 case DBTypeEnum.SQLALCHEMY:
                     self.db = SQLAlchemyDB()
+                case DBTypeEnum.JSON_FILE:
+                    self.db = JsonFileDB()
 
     async def __aenter__(self):
         await self.db.start()

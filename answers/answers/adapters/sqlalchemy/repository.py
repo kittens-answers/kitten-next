@@ -1,10 +1,12 @@
-from typing import Sequence
+from typing import Iterable, Sequence, cast
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from answers.adapters.sqlalchemy import db_models
 from answers.domain import commands, models
+from answers.domain.abstract.exceptions import DoesExist
 from answers.domain.abstract.repository import (
     AbstractAnswerRepository,
     AbstractAnswerTagRepository,
@@ -18,17 +20,6 @@ from answers.domain.specifications import Specification, TextContains
 class SQLAlchemyQuestionRepository(AbstractQuestionRepository):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
-
-    @staticmethod
-    def _from_db_model(question: db_models.Question) -> models.Question:
-        return models.Question(
-            text=question.text,
-            question_type=question.question_type,
-            created_by=question.created_by,
-            id=question.id,
-            options=frozenset(question.options["options"]),
-            extra_options=frozenset(question.options["extra_options"]),
-        )
 
     async def get(self, dto: commands.CreateQuestion) -> models.Question | None:
         stmt = (
@@ -47,7 +38,7 @@ class SQLAlchemyQuestionRepository(AbstractQuestionRepository):
         if question is None:
             return
         else:
-            return self._from_db_model(question)
+            return models.Question.from_orm(question)
 
     async def create(self, dto: commands.CreateQuestion) -> models.Question:
         question = db_models.Question(
@@ -59,8 +50,11 @@ class SQLAlchemyQuestionRepository(AbstractQuestionRepository):
             created_by=dto.user_id,
         )
         self.session.add(question)
-        await self.session.flush()
-        return self._from_db_model(question)
+        try:
+            await self.session.flush()
+        except IntegrityError as error:
+            raise DoesExist from error
+        return models.Question.from_orm(question)
 
     async def list(self, specs: list[Specification]) -> Sequence[models.Question]:
         stmt = select(db_models.Question)
@@ -70,65 +64,62 @@ class SQLAlchemyQuestionRepository(AbstractQuestionRepository):
                     db_models.Question.text.icontains(spec.q)  # type: ignore
                 )
         questions = (await self.session.scalars(stmt)).all()
-        return tuple(map(self._from_db_model, questions))
+        return tuple(map(models.Question.from_orm, questions))
 
     async def insert(self, model: models.Question):
-        self.session.add(
-            db_models.Question(
-                text=model.text,
-                question_type=model.question_type,
-                options=db_models.OptionDict(
-                    options=sorted(list(model.options)),
-                    extra_options=sorted(list(model.extra_options)),
-                ),
-                created_by=model.created_by,
-                id=model.id,
+        try:
+            self.session.add(
+                db_models.Question(
+                    text=model.text,
+                    question_type=model.question_type,
+                    options=db_models.OptionDict(
+                        options=sorted(model.options.keys()),
+                        extra_options=sorted(
+                            cast(Iterable[str], model.options.values())
+                        ),
+                    ),
+                    created_by=model.created_by,
+                    id=model.id,
+                )
             )
-        )
+            await self.session.flush()
+        except IntegrityError as error:
+            raise DoesExist from error
 
 
 class SQLAlchemyUserRepository(AbstractUserRepository):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    @staticmethod
-    def _from_db_model(user: db_models.User) -> models.User:
-        return models.User(id=user.id)
-
     async def get(self, dto: commands.CreateUser) -> models.User | None:
         user = await self.session.get(db_models.User, dto.user_id)
         if user is None:
             return
         else:
-            return self._from_db_model(user)
+            return models.User.from_orm(user)
 
     async def create(self, dto: commands.CreateUser) -> models.User:
         user = db_models.User(id=dto.user_id)
         self.session.add(user)
         await self.session.flush()
-        return self._from_db_model(user)
+        return models.User.from_orm(user)
 
     async def list(self, specs: list[Specification]) -> Sequence[models.User]:
         stmt = select(db_models.User)
         users = (await self.session.scalars(stmt)).all()
-        return tuple(map(self._from_db_model, users))
+        return tuple(map(models.User.from_orm, users))
 
     async def insert(self, model: models.User):
-        self.session.add(db_models.User(id=model.id))
+        try:
+            self.session.add(db_models.User(id=model.id))
+            await self.session.flush()
+        except IntegrityError as error:
+            raise DoesExist from error
 
 
 class SQLAlchemyAnswerRepository(AbstractAnswerRepository):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
-
-    @staticmethod
-    def _from_db_model(answer: db_models.Answer) -> models.Answer:
-        return models.Answer(
-            id=answer.id,
-            question_id=answer.question_id,
-            answer=tuple(answer.answer.items()),
-            created_by=answer.created_by,
-        )
 
     async def get(self, dto: commands.CreateAnswer) -> models.Answer | None:
         stmt = (
@@ -143,7 +134,7 @@ class SQLAlchemyAnswerRepository(AbstractAnswerRepository):
         if answer is None:
             return None
         else:
-            return self._from_db_model(answer)
+            return models.Answer.from_orm(answer)
 
     async def create(self, dto: commands.CreateAnswer) -> models.Answer:
         answer = db_models.Answer(
@@ -154,37 +145,31 @@ class SQLAlchemyAnswerRepository(AbstractAnswerRepository):
         answer.created_by = dto.user_id
         self.session.add(answer)
         await self.session.flush()
-        return self._from_db_model(answer)
+        return models.Answer.from_orm(answer)
 
     async def list(self, specs: list[Specification]) -> Sequence[models.Answer]:
         stmt = select(db_models.Answer)
         answers = (await self.session.scalars(stmt)).all()
-        return tuple(map(self._from_db_model, answers))
+        return tuple(map(models.Answer.from_orm, answers))
 
     async def insert(self, model: models.Answer):
-        self.session.add(
-            db_models.Answer(
-                question_id=model.question_id,
-                answer=db_models.AnswerDict(sorted(model.answer)),
-                created_by=model.created_by,
-                id=model.id,
+        try:
+            self.session.add(
+                db_models.Answer(
+                    question_id=model.question_id,
+                    answer=model.answer,
+                    created_by=model.created_by,
+                    id=model.id,
+                )
             )
-        )
+            await self.session.flush()
+        except IntegrityError as error:
+            raise DoesExist from error
 
 
 class SQLAlchemyAnswerTagRepository(AbstractAnswerTagRepository):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
-
-    @staticmethod
-    def _from_db_model(tag: db_models.AnswerTag) -> models.AnswerTag:
-        return models.AnswerTag(
-            id=tag.id,
-            answer_id=tag.answer_id,
-            created_by=tag.created_by,
-            tag_name=tag.tag_name,
-            value=tag.value,
-        )
 
     async def get(self, dto: commands.CreateTag) -> models.AnswerTag | None:
         stmt = (
@@ -198,7 +183,7 @@ class SQLAlchemyAnswerTagRepository(AbstractAnswerTagRepository):
         )
         tag = (await self.session.scalars(stmt)).first()
         if tag is not None:
-            return self._from_db_model(tag)
+            return models.AnswerTag.from_orm(tag)
 
     async def create(self, dto: commands.CreateTag) -> models.AnswerTag:
         tag = db_models.AnswerTag(
@@ -209,23 +194,27 @@ class SQLAlchemyAnswerTagRepository(AbstractAnswerTagRepository):
         )
         self.session.add(tag)
         await self.session.flush()
-        return self._from_db_model(tag)
+        return models.AnswerTag.from_orm(tag)
 
     async def list(self, specs: list[Specification]) -> Sequence[models.AnswerTag]:
         stmt = select(db_models.AnswerTag)
         answer_tags = (await self.session.scalars(stmt)).all()
-        return tuple(map(self._from_db_model, answer_tags))
+        return tuple(map(models.AnswerTag.from_orm, answer_tags))
 
     async def insert(self, model: models.AnswerTag):
-        self.session.add(
-            db_models.AnswerTag(
-                answer_id=model.answer_id,
-                created_by=model.created_by,
-                tag_name=model.tag_name,
-                value=model.value,
-                id=model.id,
+        try:
+            self.session.add(
+                db_models.AnswerTag(
+                    answer_id=model.answer_id,
+                    created_by=model.created_by,
+                    tag_name=model.tag_name,
+                    value=model.value,
+                    id=model.id,
+                )
             )
-        )
+            await self.session.flush()
+        except IntegrityError as error:
+            raise DoesExist from error
 
 
 class SQLAlchemyRepository(AbstractRepository):

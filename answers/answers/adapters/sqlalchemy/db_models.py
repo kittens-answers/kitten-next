@@ -3,16 +3,13 @@ from typing import TypedDict
 from sqlalchemy import JSON, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, mapped_column
 
-from answers.domain.models import QuestionType, TagsType
+from answers.domain.models import AnswerDict, QuestionType, TagsType
 from answers.domain.utils import new_id
 
 
 class OptionDict(TypedDict):
     options: list[str]
     extra_options: list[str]
-
-
-AnswerDict = dict[str, str]
 
 
 class Base(DeclarativeBase, MappedAsDataclass):

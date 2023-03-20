@@ -5,6 +5,7 @@ from pydantic import BaseSettings as PydanticBaseSettings
 
 class DBTypeEnum(StrEnum):
     SQLALCHEMY = "SQLALCHEMY"
+    JSON_FILE = "JSON_FILE"
 
 
 class BaseSettings(PydanticBaseSettings):

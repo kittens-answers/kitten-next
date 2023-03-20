@@ -1,6 +1,6 @@
 import pytest
-from sqlalchemy.exc import IntegrityError
 
+from answers.domain.abstract.exceptions import DoesExist
 from answers.domain.abstract.repository import AbstractRepository
 from answers.domain.commands import CreateQuestion
 from answers.domain.models import Question, QuestionType
@@ -136,5 +136,5 @@ async def test_unique(
     question_dto: CreateQuestion,
 ):
     async with repository:
-        with pytest.raises(expected_exception=IntegrityError):
+        with pytest.raises(expected_exception=DoesExist):
             await repository.questions.create(dto=question_dto)
