@@ -1,46 +1,36 @@
 import pytest
 
+from answers.domain import commands, models
 from answers.domain.abstract.repository import AbstractRepository
-from answers.domain.commands import CreateTag
-from answers.domain.models import AnswerTag
+from answers.domain.exceptions import repository_exc
 
 pytestmark = pytest.mark.anyio
 
 
-async def test_empty(repository: AbstractRepository, tag_dto: CreateTag):
-    async with repository:
-        tag = await repository.tags.get(dto=tag_dto)
-        await repository.commit()
-
-    assert tag is None
-
-
-async def test_get_if_exist(
-    repository: AbstractRepository, tag_dto: CreateTag, tag_in_db: AnswerTag
+async def test_wrong_answer_id(
+    repository: AbstractRepository,
+    create_tag_command: commands.CreateTag,
+    user_in_db: models.User,
 ):
-    async with repository:
-        tag = await repository.tags.get(dto=tag_dto)
-        await repository.commit()
-
-    assert tag is not None
-    assert tag.id == tag_in_db.id
+    with pytest.raises(repository_exc.AnswerDoesNotExist):
+        await repository.add_tag(user=user_in_db, answer_id="wrong", command=create_tag_command)
 
 
-async def test_update_empty(repository: AbstractRepository, tag_dto: CreateTag):
-    async with repository:
-        tag, is_created = await repository.tags.get_or_create(dto=tag_dto)
-        await repository.commit()
-
-    assert is_created is True
-    assert tag is not None
-
-
-async def test_update_if_exist(
-    repository: AbstractRepository, tag_dto: CreateTag, tag_in_db: AnswerTag
+async def test_create(
+    repository: AbstractRepository,
+    create_tag_command: commands.CreateTag,
+    user_in_db: models.User,
+    answer_in_db: models.Answer,
 ):
-    async with repository:
-        tag, is_created = await repository.tags.get_or_create(dto=tag_dto)
-        await repository.commit()
+    tag1 = await repository.add_tag(user=user_in_db, answer_id=answer_in_db.id, command=create_tag_command)
+    assert tag1.value == create_tag_command.value
 
-    assert is_created is False
-    assert tag.id == tag_in_db.id
+    tag2 = await repository.add_tag(user=user_in_db, answer_id=answer_in_db.id, command=create_tag_command)
+    assert tag2.value == create_tag_command.value
+
+    create_tag_command.value = str(False)
+    tag3 = await repository.add_tag(user=user_in_db, answer_id=answer_in_db.id, command=create_tag_command)
+    assert tag3.value == create_tag_command.value
+
+    assert tag1.id == tag2.id
+    assert tag1.id == tag3.id

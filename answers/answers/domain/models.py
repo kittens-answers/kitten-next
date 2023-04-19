@@ -1,7 +1,7 @@
 import enum
 from typing import TypedDict
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, SecretStr
 
 
 class OptionDict(TypedDict):
@@ -23,6 +23,7 @@ class QuestionType(enum.StrEnum):
 @enum.unique
 class TagsType(enum.StrEnum):
     IS_CORRECT = "IS_CORRECT"
+    TEST = "TEST"
 
 
 class User(BaseModel):
@@ -30,6 +31,29 @@ class User(BaseModel):
         orm_mode = True
 
     id: str
+    user_id: SecretStr
+
+
+class Tag(BaseModel):
+    class Config:
+        orm_mode = True
+
+    id: str
+    answer_id: str
+    created_by: str
+    tag_name: TagsType
+    value: str
+
+
+class Answer(BaseModel):
+    class Config:
+        orm_mode = True
+
+    id: str
+    question_id: str
+    answer: AnswerDict
+    created_by: str
+    tags: list[Tag] = Field(default_factory=list)
 
 
 class Question(BaseModel):
@@ -42,26 +66,4 @@ class Question(BaseModel):
     created_by: str
     id: str
     options: OptionDict
-    # options: frozenset[str]
-    # extra_options: frozenset[str]
-
-
-class Answer(BaseModel):
-    class Config:
-        orm_mode = True
-
-    id: str
-    question_id: str
-    answer: AnswerDict
-    created_by: str
-
-
-class AnswerTag(BaseModel):
-    class Config:
-        orm_mode = True
-
-    id: str
-    answer_id: str
-    created_by: str
-    tag_name: TagsType
-    value: str
+    answers: list[Answer] = Field(default_factory=list)

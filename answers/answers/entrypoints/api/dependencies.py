@@ -1,14 +1,22 @@
-from typing import Annotated
+from typing import Annotated, cast
 
 from fastapi import Depends, FastAPI, Request
 
-from answers.domain.aggregate import QuestionWithAnswer
+from answers.domain import models
+from answers.domain.abstract.repository import AbstractRepository
 
 
-async def get_agr(request: Request):
+async def _get_repository(request: Request):
     app: FastAPI = request.app
-    boot = app.state.boot
-    return await boot.get_qwa_aggregate()
+    repo = cast(AbstractRepository, app.state.repo)
+    return repo
 
 
-Agr = Annotated[QuestionWithAnswer, Depends(get_agr)]
+Repository = Annotated[AbstractRepository, Depends(_get_repository)]
+
+
+async def _get_current_user(user_id: str, repository: Repository) -> models.User:
+    return await repository.get_user_by_id(user_id)
+
+
+CurrentUser = Annotated[models.User, Depends(_get_current_user)]

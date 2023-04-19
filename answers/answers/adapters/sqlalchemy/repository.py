@@ -1,236 +1,211 @@
-from typing import Iterable, Sequence, cast
+from typing import Self
 
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy import URL, select
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.orm import selectinload
 
 from answers.adapters.sqlalchemy import db_models
+from answers.adapters.sqlalchemy.db_models import Base
 from answers.domain import commands, models
-from answers.domain.abstract.exceptions import DoesExist
-from answers.domain.abstract.repository import (
-    AbstractAnswerRepository,
-    AbstractAnswerTagRepository,
-    AbstractQuestionRepository,
-    AbstractRepository,
-    AbstractUserRepository,
-)
-from answers.domain.specifications import Specification, TextContains
+from answers.domain.abstract.repository import AbstractRepository, validate_answer
+from answers.domain.exceptions import repository_exc
+from answers.settings import BaseSettings
 
 
-class SQLAlchemyQuestionRepository(AbstractQuestionRepository):
-    def __init__(self, session: AsyncSession) -> None:
-        self.session = session
+class DBSettings(BaseSettings):
+    sqlalchemy_drivername: str
+    sqlalchemy_username: str | None = None
+    sqlalchemy_password: str | None = None
+    sqlalchemy_host: str | None = None
+    sqlalchemy_port: int | None = None
+    sqlalchemy_database: str | None = None
+    sqlalchemy_echo: bool = True
 
-    async def get(self, dto: commands.CreateQuestion) -> models.Question | None:
-        stmt = (
-            select(db_models.Question)
-            .where(
-                db_models.Question.text == dto.question_text,
-                db_models.Question.question_type == dto.question_type,
-                db_models.Question.options
-                == db_models.OptionDict(
-                    options=sorted(dto.options), extra_options=sorted(dto.extra_options)
-                ),
-            )
-            .limit(1)
+    @property
+    def url(self):
+        return URL.create(
+            drivername=self.sqlalchemy_drivername,
+            username=self.sqlalchemy_username,
+            password=self.sqlalchemy_password,
+            host=self.sqlalchemy_host,
+            port=self.sqlalchemy_port,
+            database=self.sqlalchemy_database,
         )
-        question = (await self.session.scalars(stmt)).first()
-        if question is None:
-            return
-        else:
-            return models.Question.from_orm(question)
-
-    async def create(self, dto: commands.CreateQuestion) -> models.Question:
-        question = db_models.Question(
-            text=dto.question_text,
-            question_type=dto.question_type,
-            options=db_models.OptionDict(
-                options=sorted(dto.options), extra_options=sorted(dto.extra_options)
-            ),
-            created_by=dto.user_id,
-        )
-        self.session.add(question)
-        try:
-            await self.session.flush()
-        except IntegrityError as error:
-            raise DoesExist from error
-        return models.Question.from_orm(question)
-
-    async def list(self, specs: list[Specification]) -> Sequence[models.Question]:
-        stmt = select(db_models.Question)
-        for spec in specs:
-            if isinstance(spec, TextContains):
-                stmt = stmt.where(
-                    db_models.Question.text.icontains(spec.q)  # type: ignore
-                )
-        questions = (await self.session.scalars(stmt)).all()
-        return tuple(map(models.Question.from_orm, questions))
-
-    async def insert(self, model: models.Question):
-        try:
-            self.session.add(
-                db_models.Question(
-                    text=model.text,
-                    question_type=model.question_type,
-                    options=db_models.OptionDict(
-                        options=sorted(model.options.keys()),
-                        extra_options=sorted(
-                            cast(Iterable[str], model.options.values())
-                        ),
-                    ),
-                    created_by=model.created_by,
-                    id=model.id,
-                )
-            )
-            await self.session.flush()
-        except IntegrityError as error:
-            raise DoesExist from error
 
 
-class SQLAlchemyUserRepository(AbstractUserRepository):
-    def __init__(self, session: AsyncSession) -> None:
-        self.session = session
-
-    async def get(self, dto: commands.CreateUser) -> models.User | None:
-        user = await self.session.get(db_models.User, dto.user_id)
-        if user is None:
-            return
-        else:
-            return models.User.from_orm(user)
-
-    async def create(self, dto: commands.CreateUser) -> models.User:
-        user = db_models.User(id=dto.user_id)
-        self.session.add(user)
-        await self.session.flush()
-        return models.User.from_orm(user)
-
-    async def list(self, specs: list[Specification]) -> Sequence[models.User]:
-        stmt = select(db_models.User)
-        users = (await self.session.scalars(stmt)).all()
-        return tuple(map(models.User.from_orm, users))
-
-    async def insert(self, model: models.User):
-        try:
-            self.session.add(db_models.User(id=model.id))
-            await self.session.flush()
-        except IntegrityError as error:
-            raise DoesExist from error
-
-
-class SQLAlchemyAnswerRepository(AbstractAnswerRepository):
-    def __init__(self, session: AsyncSession) -> None:
-        self.session = session
-
-    async def get(self, dto: commands.CreateAnswer) -> models.Answer | None:
-        stmt = (
-            select(db_models.Answer)
-            .where(
-                db_models.Answer.question_id == dto.question_id,
-                db_models.Answer.answer == db_models.AnswerDict(sorted(dto.answer)),
-            )
-            .limit(1)
-        )
-        answer = (await self.session.scalars(stmt)).first()
-        if answer is None:
-            return None
-        else:
-            return models.Answer.from_orm(answer)
-
-    async def create(self, dto: commands.CreateAnswer) -> models.Answer:
-        answer = db_models.Answer(
-            question_id=dto.question_id,
-            answer=db_models.AnswerDict(sorted(dto.answer)),
-            created_by=dto.user_id,
-        )
-        answer.created_by = dto.user_id
-        self.session.add(answer)
-        await self.session.flush()
-        return models.Answer.from_orm(answer)
-
-    async def list(self, specs: list[Specification]) -> Sequence[models.Answer]:
-        stmt = select(db_models.Answer)
-        answers = (await self.session.scalars(stmt)).all()
-        return tuple(map(models.Answer.from_orm, answers))
-
-    async def insert(self, model: models.Answer):
-        try:
-            self.session.add(
-                db_models.Answer(
-                    question_id=model.question_id,
-                    answer=model.answer,
-                    created_by=model.created_by,
-                    id=model.id,
-                )
-            )
-            await self.session.flush()
-        except IntegrityError as error:
-            raise DoesExist from error
-
-
-class SQLAlchemyAnswerTagRepository(AbstractAnswerTagRepository):
-    def __init__(self, session: AsyncSession) -> None:
-        self.session = session
-
-    async def get(self, dto: commands.CreateTag) -> models.AnswerTag | None:
-        stmt = (
-            select(db_models.AnswerTag)
-            .where(
-                db_models.AnswerTag.answer_id == dto.answer_id,
-                db_models.AnswerTag.created_by == dto.user_id,
-                db_models.AnswerTag.tag_name == dto.tag_name,
-            )
-            .limit(1)
-        )
-        tag = (await self.session.scalars(stmt)).first()
-        if tag is not None:
-            return models.AnswerTag.from_orm(tag)
-
-    async def create(self, dto: commands.CreateTag) -> models.AnswerTag:
-        tag = db_models.AnswerTag(
-            answer_id=dto.answer_id,
-            tag_name=dto.tag_name,
-            value=dto.value,
-            created_by=dto.user_id,
-        )
-        self.session.add(tag)
-        await self.session.flush()
-        return models.AnswerTag.from_orm(tag)
-
-    async def list(self, specs: list[Specification]) -> Sequence[models.AnswerTag]:
-        stmt = select(db_models.AnswerTag)
-        answer_tags = (await self.session.scalars(stmt)).all()
-        return tuple(map(models.AnswerTag.from_orm, answer_tags))
-
-    async def insert(self, model: models.AnswerTag):
-        try:
-            self.session.add(
-                db_models.AnswerTag(
-                    answer_id=model.answer_id,
-                    created_by=model.created_by,
-                    tag_name=model.tag_name,
-                    value=model.value,
-                    id=model.id,
-                )
-            )
-            await self.session.flush()
-        except IntegrityError as error:
-            raise DoesExist from error
+# async def list(self, specs: list[Specification]) -> Sequence[models.Question]:
+#     stmt = select(db_models.Question).options(
+#         selectinload(db_models.Question.answers).selectinload(db_models.Answer.tags)
+#     )
+#     for spec in specs:
+#         if isinstance(spec, TextContains):
+#             stmt = stmt.where(db_models.Question.text.icontains(spec.q))  # type: ignore
+#     questions = (await self.session.scalars(stmt)).all()
+#     return tuple(map(models.Question.from_orm, questions))
 
 
 class SQLAlchemyRepository(AbstractRepository):
-    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
-        self._session = session_factory()
-        self.users = SQLAlchemyUserRepository(session=self._session)
-        self.questions = SQLAlchemyQuestionRepository(session=self._session)
-        self.answers = SQLAlchemyAnswerRepository(session=self._session)
-        self.tags = SQLAlchemyAnswerTagRepository(session=self._session)
+    def __init__(self, settings: DBSettings | None = None) -> None:
+        self.settings = settings or DBSettings()  # type: ignore
+        self.engine = create_async_engine(self.settings.url, echo=self.settings.sqlalchemy_echo)
+        self.session_factory = async_sessionmaker(self.engine, expire_on_commit=False)
 
-    async def __aenter__(self):
-        self._session.begin()
+    async def __aenter__(self) -> Self:
+        async with self.engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
         return self
 
-    async def commit(self):
-        await self._session.commit()
+    async def __aexit__(
+        self,
+        exc_type,
+        exc_value,
+        traceback,
+    ) -> bool | None:
+        await self.engine.dispose()
 
-    async def rollback(self):
-        await self._session.rollback()
+    async def create_user(self, command: commands.CreateUser) -> models.User:
+        async with self.session_factory() as session:
+            stmt = select(db_models.User).where(db_models.User.user_id == command.user_id).limit(1)
+            user = (await session.scalars(stmt)).first()
+            if user is None:
+                user = db_models.User(user_id=command.user_id)
+                session.add(user)
+                await session.commit()
+                return models.User.from_orm(user)
+            else:
+                raise repository_exc.UserAlreadyExist(user=models.User.from_orm(user))
+
+    async def get_user_by_id(self, user_id: str) -> models.User:
+        async with self.session_factory() as session:
+            stmt = select(db_models.User).where(db_models.User.id == user_id).limit(1)
+            user = (await session.scalars(stmt)).first()
+            if user is None:
+                raise repository_exc.UserDoesNotExist(user_id=user_id)
+            return models.User.from_orm(user)
+
+    async def create_question(self, user: models.User, command: commands.CreateQuestion) -> models.Question:
+        async with self.session_factory() as session:
+            stmt = (
+                select(db_models.Question)
+                .options(selectinload(db_models.Question.answers).selectinload(db_models.Answer.tags))
+                .where(
+                    db_models.Question.text == command.question_text,
+                    db_models.Question.question_type == command.question_type,
+                    db_models.Question.options == db_models.build_option_dict(command.options, command.extra_options),
+                )
+                .limit(1)
+            )
+            question = (await session.scalars(stmt)).first()
+            if question is None:
+                question = db_models.Question(
+                    text=command.question_text,
+                    question_type=command.question_type,
+                    options=db_models.build_option_dict(command.options, command.extra_options),
+                    created_by=user.id,
+                    answers=[],
+                )
+                session.add(question)
+                await session.commit()
+                return models.Question.from_orm(question)
+            else:
+                raise repository_exc.QuestionAlreadyExist(question=models.Question.from_orm(question))
+
+    async def get_question_by_id(self, question_id: str) -> models.Question:
+        async with self.session_factory() as session:
+            stmt = (
+                select(db_models.Question)
+                .options(selectinload(db_models.Question.answers).selectinload(db_models.Answer.tags))
+                .where(db_models.Question.id == question_id)
+                .limit(1)
+            )
+            question = (await session.scalars(stmt)).first()
+            if question is None:
+                raise repository_exc.QuestionDoesNotExist(question_id=question_id)
+            return models.Question.from_orm(question)
+
+    async def create_answer(self, user: models.User, question_id: str, command: commands.CreateAnswer) -> models.Answer:
+        async with self.session_factory() as session:
+            question = await session.get(db_models.Question, question_id)
+            if question is None:
+                raise repository_exc.QuestionDoesNotExist(question_id=question_id)
+            validate_answer(
+                options=frozenset(question.options["options"]),
+                extra_options=frozenset(question.options["extra_options"]),
+                question_type=question.question_type,
+                answer=command.answer,
+            )
+            stmt = (
+                select(db_models.Answer)
+                .options(selectinload(db_models.Answer.tags))
+                .where(
+                    db_models.Answer.question_id == question.id,
+                    db_models.Answer.answer == db_models.AnswerDict(sorted(command.answer)),
+                )
+                .limit(1)
+            )
+        answer = (await session.scalars(stmt)).first()
+        if answer is None:
+            answer = db_models.Answer(
+                question_id=question.id,
+                tags=[],
+                answer=db_models.AnswerDict(sorted(command.answer)),
+                created_by=user.id,
+            )
+            if command.is_correct is not None:
+                answer.tags.append(
+                    db_models.Tag(
+                        answer_id=answer.id,
+                        created_by=user.id,
+                        tag_name=db_models.TagsType.IS_CORRECT,
+                        value=str(command.is_correct),
+                    )
+                )
+            session.add(answer)
+            await session.commit()
+            return models.Answer.from_orm(answer)
+        else:
+            raise repository_exc.AnswerAlreadyExist(answer=models.Answer.from_orm(answer))
+
+    async def get_answer_by_id(self, answer_id: str) -> models.Answer:
+        async with self.session_factory() as session:
+            stmt = (
+                select(db_models.Answer)
+                .options(selectinload(db_models.Answer.tags))
+                .where(db_models.Answer.id == answer_id)
+                .limit(1)
+            )
+            answer = (await session.scalars(stmt)).first()
+            if answer is None:
+                raise repository_exc.AnswerDoesNotExist(answer_id=answer_id)
+            return models.Answer.from_orm(answer)
+
+    async def add_tag(self, user: models.User, answer_id: str, command: commands.CreateTag) -> models.Tag:
+        async with self.session_factory() as session:
+            answer = await session.get(db_models.Answer, answer_id)
+            if answer is None:
+                raise repository_exc.AnswerDoesNotExist(answer_id=answer_id)
+            stmt = (
+                select(db_models.Tag)
+                .where(
+                    db_models.Tag.answer_id == answer_id,
+                    db_models.Tag.created_by == user.id,
+                    db_models.Tag.tag_name == command.tag_name,
+                )
+                .limit(1)
+            )
+            tag = (await session.scalars(stmt)).first()
+            if tag is None:
+                tag = db_models.Tag(
+                    answer_id=answer_id, created_by=user.id, tag_name=command.tag_name, value=command.value
+                )
+                session.add(tag)
+                await session.commit()
+                return models.Tag.from_orm(tag)
+            else:
+                if tag.value != command.value:
+                    tag.value = command.value
+                    session.add(tag)
+                    await session.commit()
+                    return models.Tag.from_orm(tag)
+                else:
+                    return models.Tag.from_orm(tag)
