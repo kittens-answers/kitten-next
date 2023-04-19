@@ -7,16 +7,26 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.1"}
+aiosqlite = "^0.18.0"
+shortuuid = "^1.0.11"
+typer = {extras = ["all"], version = "^0.7.0"}
+pydantic = {extras = ["dotenv"], version = "^1.10.6"}
+fastapi = "^0.95.0"
+uvicorn = {extras = ["standard"], version = "^0.21.0"}
 
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.12.0"
 isort = "^5.12.0"
-ruff = "^0.0.237"
 anyio = "^3.6.2"
 pytest = "^7.2.1"
 coverage = "^7.1.0"
 pytest-cov = "^4.0.0"
+ruff = "^0.0.256"
+httpx = "^0.23.3"
+asgi-lifespan = ">=2.0.0,<3.0.0"
+faker = "^18.4.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -27,3 +37,9 @@ profile = "black"
 
 [tool.pytest.ini_options]
 addopts = "--cov=answers --cov-report=html tests/"
+
+[tool.black]
+line-length = 120
+
+[tool.ruff]
+line-length = 120

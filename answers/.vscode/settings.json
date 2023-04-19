@@ -1,14 +1,20 @@
 {
-    "python.analysis.typeCheckingMode": "basic",
     "cSpell.words": [
-        "anyio",
-        "pytestmark"
-    ],
-    "python.testing.pytestArgs": [
-        "--cov=answers",
-        "--cov-report=html",
-        "tests/"
-    ],
-    "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+        "aiosqlite",
+        "asgi",
+        "autouse",
+        "drivername",
+        "fastapi",
+        "httpx",
+        "joinedload",
+        "jsonable",
+        "pydantic",
+        "pytestmark",
+        "selectinload",
+        "sessionmaker",
+        "shortuuid",
+        "sqlalchemy",
+        "typer",
+        "usefixtures"
+    ]
 }
