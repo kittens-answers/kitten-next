@@ -7,4 +7,4 @@ test:
 	poetry run pytest
 
 dev-api:
-	uvicorn answers.entrypoints.api:app --reload
+	poetry run uvicorn answers.entrypoints.api:app --reload
