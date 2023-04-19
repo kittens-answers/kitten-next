@@ -24,6 +24,9 @@ pytest = "^7.2.1"
 coverage = "^7.1.0"
 pytest-cov = "^4.0.0"
 ruff = "^0.0.256"
+httpx = "^0.23.3"
+asgi-lifespan = ">=2.0.0,<3.0.0"
+faker = "^18.4.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -34,3 +37,9 @@ profile = "black"
 
 [tool.pytest.ini_options]
 addopts = "--cov=answers --cov-report=html tests/"
+
+[tool.black]
+line-length = 120
+
+[tool.ruff]
+line-length = 120
