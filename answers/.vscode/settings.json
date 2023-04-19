@@ -1,9 +1,13 @@
 {
     "cSpell.words": [
         "aiosqlite",
+        "asgi",
+        "autouse",
         "drivername",
         "fastapi",
+        "httpx",
         "joinedload",
+        "jsonable",
         "pydantic",
         "pytestmark",
         "selectinload",
