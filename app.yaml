@@ -1,0 +1,17 @@
+---
+- hosts: dokku
+  tasks:
+    - name: does the api app exist
+      shell: dokku apps:exists test-api
+      register: api_app_exist
+      ignore_errors: True
+
+    - name: create an app
+      shell: dokku apps:create test-api
+      when: api_app_exist.rc != 0
+    
+    - name: set db settings
+      shell: dokku config:set test-api kittens_sqlalchemy_drivername="sqlite+aiosqlite" --no-restart
+
+    - name: set Dockerfile path
+      shell: dokku builder-dockerfile:set test-api dockerfile-path answers/Dockerfile
