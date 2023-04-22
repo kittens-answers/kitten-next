@@ -10,4 +10,4 @@ COPY --from=requirements-stage /tmp/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 COPY ./answers/answers /app/answers
 EXPOSE 5000
-CMD ["uvicorn", "answers.entrypoints.api:app", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["uvicorn", "answers.entrypoints.api:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "5000"]
