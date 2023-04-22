@@ -15,3 +15,6 @@
 
     - name: set Dockerfile path
       shell: dokku builder-dockerfile:set stage-api dockerfile-path answers/Dockerfile
+
+    - name: turn on https
+      shell: dokku letsencrypt:enable stage-api
