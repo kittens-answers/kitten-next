@@ -14,7 +14,7 @@
       shell: dokku config:set stage-api kittens_sqlalchemy_drivername="sqlite+aiosqlite" --no-restart
 
     - name: set Dockerfile path
-      shell: dokku builder-dockerfile:set stage-api dockerfile-path answers/Dockerfile
+      shell: dokku builder-dockerfile:set stage-api dockerfile-path deploy/Dockerfile
 
     - name: turn on https
       shell: dokku letsencrypt:enable stage-api
