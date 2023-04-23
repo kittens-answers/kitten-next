@@ -13,7 +13,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - run: ls ${{ github.workspace }}
+      - run: ls ${{ github.workspace }}/deploy
 
       - name: Run playbook
         uses: dawidd6/action-ansible-playbook@v2
