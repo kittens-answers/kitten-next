@@ -2,6 +2,7 @@
 name: 'deploy'
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - dev
@@ -15,8 +16,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Push to dokku
+      - name: Push to dokku api
         uses: dokku/github-action@master
         with:
           git_remote_url: 'ssh://dokku@kittensanswers.ru:22/stage-api'
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Push to dokku front
+        uses: dokku/github-action@master
+        with:
+          git_remote_url: 'ssh://dokku@kittensanswers.ru:22/stage-front'
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
