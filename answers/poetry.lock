@@ -105,7 +105,7 @@ uvloop = ["uvloop (>=0.15.2)"]
 name = "certifi"
 version = "2022.12.7"
 description = "Python package for providing Mozilla's CA Bundle."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -346,7 +346,7 @@ files = [
 name = "httpcore"
 version = "0.16.3"
 description = "A minimal low-level HTTP client."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -422,7 +422,7 @@ test = ["Cython (>=0.29.24,<0.30.0)"]
 name = "httpx"
 version = "0.23.3"
 description = "The next generation HTTP client."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -693,6 +693,32 @@ files = [
 cli = ["click (>=5.0)"]
 
 [[package]]
+name = "python-telegram-bot"
+version = "20.2"
+description = "We have made you a wrapper you can't refuse"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "python-telegram-bot-20.2.tar.gz", hash = "sha256:d0aa53e1f06d7cb7919cc0e2d6c81a02d968fc29921aeaa962edd1efb816a9bd"},
+    {file = "python_telegram_bot-20.2-py3-none-any.whl", hash = "sha256:4d1d4b643ce158aa17a0987b84005eaf25fe0ce8b38fd234099594985611c198"},
+]
+
+[package.dependencies]
+httpx = ">=0.23.3,<0.24.0"
+
+[package.extras]
+all = ["APScheduler (>=3.10.1,<3.11.0)", "aiolimiter (>=1.0.0,<1.1.0)", "cachetools (>=5.3.0,<5.4.0)", "cryptography (>=39.0.1)", "httpx[http2]", "httpx[socks]", "pytz (>=2018.6)", "tornado (>=6.2,<7.0)"]
+callback-data = ["cachetools (>=5.3.0,<5.4.0)"]
+ext = ["APScheduler (>=3.10.1,<3.11.0)", "aiolimiter (>=1.0.0,<1.1.0)", "cachetools (>=5.3.0,<5.4.0)", "pytz (>=2018.6)", "tornado (>=6.2,<7.0)"]
+http2 = ["httpx[http2]"]
+job-queue = ["APScheduler (>=3.10.1,<3.11.0)", "pytz (>=2018.6)"]
+passport = ["cryptography (>=39.0.1)"]
+rate-limiter = ["aiolimiter (>=1.0.0,<1.1.0)"]
+socks = ["httpx[socks]"]
+webhooks = ["tornado (>=6.2,<7.0)"]
+
+[[package]]
 name = "pyyaml"
 version = "6.0"
 description = "YAML parser and emitter for Python"
@@ -746,7 +772,7 @@ files = [
 name = "rfc3986"
 version = "1.5.0"
 description = "Validating URI References per RFC 3986"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 files = [
@@ -1175,4 +1201,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "952df8f4e0bd6692b70653022d4279968698603b46e3b1d84870d0df54118eb1"
+content-hash = "b4a9aa192eeac225469d91b8f1888d59a466d35a4ad5c2f3539bc019253852fa"
