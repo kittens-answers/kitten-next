@@ -1,28 +1,16 @@
 ---
 - hosts: dokku
-  vars:
-    app_data:
-      - {
-          app_name: "stage-api",
-          app_env: 'kittens_sqlalchemy_drivername="sqlite+aiosqlite"',
-          dockerfile: "deploy/Dockerfile.api",
-        }
-      - {
-          app_name: "stage-front",
-          app_env: "",
-          dockerfile: "deploy/Dockerfile.front",
-        }
   tasks:
     - name: does the apps exist
       shell: dokku apps:exists {{ item.app_name }}
-      register: api_app_exist
+      register: apps_exist
       ignore_errors: True
       loop: "{{ app_data }}"
 
     - name: create apps
       shell: dokku apps:create {{ item.item.app_name }}
       when: item.rc != 0
-      loop: "{{ api_app_exist.results }}"
+      loop: "{{ apps_exist.results }}"
 
     - name: set env
       shell: dokku config:set {{ item.app_name }} {{ item.app_env }} --no-restart

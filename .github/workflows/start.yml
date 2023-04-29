@@ -19,5 +19,5 @@ jobs:
           playbook: ${{ github.workspace }}/deploy/app.yaml
           key: ${{secrets.SSH_PRIVATE_KEY}}
           options: |
-            --inventory ${{ github.workspace }}/deploy/hosts
+            --inventory ${{ github.workspace }}/deploy/hosts.yaml
             -u root

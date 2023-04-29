@@ -1,0 +1,15 @@
+dokku:
+  hosts:
+    kittensanswers.ru:
+  vars:
+    app_data:
+      - {
+          app_name: "stage-api",
+          app_env: 'kittens_sqlalchemy_drivername="sqlite+aiosqlite"',
+          dockerfile: "deploy/Dockerfile.api",
+        }
+      - {
+          app_name: "stage-front",
+          app_env: "",
+          dockerfile: "deploy/Dockerfile.front",
+        }

@@ -8,6 +8,22 @@ on:
       - dev
 
 jobs:
+  pre_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Run playbook
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: ${{ github.workspace }}/deploy/app.yaml
+          key: ${{secrets.SSH_PRIVATE_KEY}}
+          options: |
+            --inventory ${{ github.workspace }}/deploy/hosts.yaml
+            -u root
   deploy:
     runs-on: ubuntu-latest
     steps:
