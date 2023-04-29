@@ -4,11 +4,11 @@ dokku:
     app_data:
       - {
           app_name: "stage-api",
-          app_env: 'kittens_sqlalchemy_drivername="sqlite+aiosqlite"',
+          app_env: "{{ lookup('ansible.builtin.env', 'STAGE_API_ENV', default='') }}",
           dockerfile: "deploy/Dockerfile.api",
         }
       - {
           app_name: "stage-front",
-          app_env: "",
+          app_env: "{{ lookup('ansible.builtin.env', 'STAGE_API_FRONT', default='') }}",
           dockerfile: "deploy/Dockerfile.front",
         }
