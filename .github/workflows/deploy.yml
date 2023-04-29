@@ -18,6 +18,8 @@ jobs:
 
       - name: Run playbook
         uses: dawidd6/action-ansible-playbook@v2
+        env:
+          DOKKU_HOST: ${{ secrets.DOKKU_HOST }}
         with:
           playbook: ${{ github.workspace }}/deploy/app.yaml
           key: ${{secrets.SSH_PRIVATE_KEY}}

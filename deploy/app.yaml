@@ -1,5 +1,5 @@
 ---
-- hosts: dokku
+- hosts: all
   tasks:
     - name: does the apps exist
       shell: dokku apps:exists {{ item.app_name }}

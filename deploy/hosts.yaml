@@ -1,6 +1,5 @@
 dokku:
-  hosts:
-    kittensanswers.ru:
+  hosts: "{{ lookup('ansible.builtin.env', 'DOKKU_HOST') }}"
   vars:
     app_data:
       - {
