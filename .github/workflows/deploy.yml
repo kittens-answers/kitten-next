@@ -21,6 +21,7 @@ jobs:
         env:
           DOKKU_HOST: ${{ secrets.DOKKU_HOST }}
           STAGE_API_ENV: ${{ secrets.STAGE_API_ENV }}
+          STAGE_TG_ENV: ${{ secrets.STAGE_TG_ENV }}
         with:
           playbook: ${{ github.workspace }}/deploy/app.yaml
           key: ${{secrets.SSH_PRIVATE_KEY}}

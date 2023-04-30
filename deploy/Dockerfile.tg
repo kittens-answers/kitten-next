@@ -10,4 +10,4 @@ COPY --from=requirements-stage /tmp/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 COPY ./answers/answers /app/answers
 EXPOSE 5000
-CMD ["python", "answers/entrypoints/tg/__init__.py"]uvicorn
+CMD ["python", "answers/entrypoints/bot/__init__.py"]
