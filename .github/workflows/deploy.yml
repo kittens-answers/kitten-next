@@ -47,3 +47,9 @@ jobs:
         with:
           git_remote_url: 'ssh://dokku@kittensanswers.ru:22/stage-front'
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Push to dokku tg
+        uses: dokku/github-action@master
+        with:
+          git_remote_url: 'ssh://dokku@kittensanswers.ru:22/stage-tg'
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}

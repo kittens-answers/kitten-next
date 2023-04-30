@@ -12,3 +12,8 @@ dokku:
           app_env: "{{ lookup('ansible.builtin.env', 'STAGE_API_FRONT', default='') }}",
           dockerfile: "deploy/Dockerfile.front",
         }
+      - {
+          app_name: "stage-tg",
+          app_env: "{{ lookup('ansible.builtin.env', 'STAGE_TG_ENV', default='') }}",
+          dockerfile: "deploy/Dockerfile.tg",
+        }
