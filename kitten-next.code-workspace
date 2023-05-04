@@ -1,20 +1,16 @@
 {
 	"folders": [
 		{
-			"path": "deploy",
-			"name": "Deploy"
+			"path": ".",
+			"name": "root"
 		},
 		{
 			"path": "kitten",
-			"name": "Front"
+			"name": "front"
 		},
 		{
 			"path": "answers",
-			"name": "API"
-		},
-		{
-			"path": ".github",
-			"name": "GitHub"
+			"name": "api"
 		}
 	],
 	"settings": {
@@ -55,7 +51,6 @@
 			"**/Thumbs.db": true,
 			"**/.pytest_cache": true,
 			"**/.ruff_cache": true
-
 		}
 	}
 }
