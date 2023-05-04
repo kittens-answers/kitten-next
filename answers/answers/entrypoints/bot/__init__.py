@@ -12,7 +12,7 @@ token: str = environ.get("kittens_token", "")
 menu_url: str = environ.get("kittens_menu_url", "")
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):``
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     assert update.effective_chat
     await context.bot.setChatMenuButton(
         chat_id=update.effective_chat.id,
